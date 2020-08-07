@@ -5,7 +5,7 @@ import numpy as np
 class SegmentationExtractor(ABC):
     # TODO:
     #  - mine for and add channel related info like location, emission lambda
-    #  - look for image related data in schnitzer lab stuff and caiman if possible.
+    #  - change data definitions after adding plane specific datasets
     """An abstract class that contains all the meta-data and output data from
         the ROI segmentation operation when applied to the pre-processed data.
         It also contains methods to read from and write to various data formats
@@ -128,7 +128,7 @@ class SegmentationExtractor(ABC):
 
     @staticmethod
     @abstractmethod
-    def write_recording(segext_obj, savepath, metadata_dict=None, **kwargs):
+    def write_segmentation(segext_obj, savepath, metadata_dict=None, **kwargs):
         """
         Static method to write recording back to the native format.
         Parameters
@@ -256,7 +256,7 @@ class SegmentationExtractor(ABC):
 
         Returns
         -------
-        pixel_masks: numpy.ndarray
+        pixel_masks: numpy.ndarray #TODO: not an array but a list now
             2-D array: (total pixels X length(ROI_ids)) X 4
             Column 1 and 2 are x and y values of the pixels.
             Column 3 is the weight for that pixel.

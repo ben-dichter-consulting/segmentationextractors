@@ -30,29 +30,58 @@ Ophys:
   Fluorescence:
     name: Fluorescence
     roi_response_series:
-    - name: RoiResponseSeries
+    - name: RoiResponseSeries_plane0
       description: array of fluorescence traces
-    - name: Neuropil
+    - name: Neuropil_plane0
       description: array of neuropil fluorescence traces
-    - name: Deconvolved
+    - name: Deconvolved_plane0
+      description: array of deconvolved  traces
+    - name: RoiResponseSeries_plane1
+      description: array of fluorescence traces
+    - name: Neuropil_plane1
+      description: array of neuropil fluorescence traces
+    - name: Deconvolved_plane1
       description: array of deconvolved  traces
   ImageSegmentation:
-    name: ABCD
+    name: ImageSegmentation
     plane_segmentations:
-    - name: MyplaneSegmentation
-      description: Segmented ROIs
+    - name: PlaneSegmentation0
+      description: Segmented ROIs for Plane0
+    - name: PlaneSegmentation1
+      description: Segmented ROIs for Plane1
   ImagingPlane:
-    - description: standard
+    - description: standard1
       excitation_lambda: 600.0
       imaging_rate: 1.0
       indicator: GCaMP
       location: V1
-      name: ImagingPlane
+      name: ImagingPlane1
       grid_spacing: [2,2]
       grid_spacing_unit: microns
       optical_channel:
-        - name: OpticalChannel
+        - name: OpticalChannel1
+          description: description
           emission_lambda: 500.0
+        - name: OpticalChannel1
+          description: description
+          emission_lambda: 500.0
+    - description: standard2
+      excitation_lambda: 400.0
+      imaging_rate: 1.0
+      indicator: GCaMP
+      location: V12
+      name: ImagingPlane2
+      grid_spacing: [2,2]
+      grid_spacing_unit: microns
+      optical_channel:
+        - name: OpticalChannel1
+          description: description
+          emission_lambda: 500.0
+        - name: OpticalChannel1
+          description: description
+          emission_lambda: 600.0
   TwoPhotonSeries:
-    - name: TwoPhotonSeries
+    - name: TwoPhotonSeries_plane0
+      description: description
+    - name: TwoPhotonSeries_plane1
       description: description

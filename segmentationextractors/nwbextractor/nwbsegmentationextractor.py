@@ -7,7 +7,7 @@ from dateutil.tz import tzlocal
 import numpy as np
 import re
 import yaml
-from segmentationextractors.segmentationextractor import SegmentationExtractor
+from ..segmentationextractor import SegmentationExtractor
 from lazy_ops import DatasetView
 from hdmf.data_utils import DataChunkIterator
 try:
@@ -339,6 +339,7 @@ class NwbSegmentationExtractor(SegmentationExtractor):
             with open(metadata_dict, 'r') as f:
                 metadata = yaml.safe_load(f)
 
+        metadata_dict = metadata
         #NWB file:
         nwbfile_args = dict(identifier=str(uuid.uuid4()), )
         nwbfile_args.update(**metadata_dict['NWBFile'])
@@ -359,29 +360,33 @@ class NwbSegmentationExtractor(SegmentationExtractor):
                                                      'contains optical physiology processed data')
 
         #ImageSegmentation:
-        image_segmentation = ImageSegmentation(metadata_dict['Ophys']['ImageSegmentation']['name'])
+        image_segmentation = ImageSegmentation(name=metadata_dict['Ophys']['ImageSegmentation']['name'])
         ophys_mod.add_data_interface(image_segmentation)
 
         #OPtical Channel:
         channel_names = segext_obj.get_channel_names()
-        input_args=[dict(name=i) for i in channel_names]
-        for j,i in enumerate(metadata_dict['Ophys']['ImagingPlane']['optical_channel']):
-            input_args[j].update(**i)
-        optical_channels=[OpticalChannel(input_args[j]) for j,i in enumerate(channel_names)]
+        input_args=[[dict(name=i) for i in channel_names[k]] for k in range(segext_obj.no_planes)]
+        for j,i in enumerate(metadata_dict['Ophys']['ImagingPlane']):
+            for j2,i2 in enumerate(i['optical_channel']):
+                input_args[j][j2].update(**i2)
+        optical_channels=[[OpticalChannel(**input_args[k][j]) for j,i in enumerate(channel_names[k])]
+                          for k in range(segext_obj.no_planes)]
 
         #Imaging Plane:
         input_kwargs = [dict(
-            name='ImagingPlane',
+            name=f'ImagingPlane{i}',
             description='no description',
-            device=i,
+            device=list(nwbfile.devices.values())[0],
             excitation_lambda=np.nan,
-            optical_channel=optical_channels,
             imaging_rate=1.0,
             indicator='unknown',
             location='unknown'
-        ) for i in nwbfile.devices.values()]
-        [input_kwargs[j].update(**i) for j,i in enumerate(metadata_dict['Ophys']['ImagingPlane'])]#update with metadata
-        imaging_planes = [nwbfile.create_imaging_plane(i) for i in input_kwargs]
+        ) for i in range(segext_obj.no_planes)]
+        for j, i in enumerate(metadata_dict['Ophys']['ImagingPlane']):
+            _ = i.pop('optical_channel')
+            i.update(optical_channel=optical_channels[j])
+            input_kwargs[j].update(**i)#update with metadata
+        imaging_planes = [nwbfile.create_imaging_plane(**i) for i in input_kwargs]
 
         #Plane Segmentation:
         input_kwargs = [dict(
@@ -391,37 +396,45 @@ class NwbSegmentationExtractor(SegmentationExtractor):
         ) for i in imaging_planes]
         [input_kwargs[j].update(**i)
          for j,i in enumerate(metadata_dict['Ophys']['ImageSegmentation']['plane_segmentations'])]  # update with metadata
-        ps = [image_segmentation.create_plane_segmentation(i) for i in input_kwargs]
+        ps = [image_segmentation.create_plane_segmentation(**i) for i in input_kwargs]
 
         # ROI add:
-        pixel_mask_exist = segext_obj.get_pixel_masks() is not None
-        for i, roiid in enumerate(segext_obj.roi_idx):
-            if pixel_mask_exist:
-                [ps_loop.add_roi(id=roiid,
-                           pixel_mask=segext_obj.get_pixel_masks(ROI_ids=[roiid])[:, 0:-1])
-                for ps_loop in ps]
+        pixel_mask_list = segext_obj.get_pixel_masks()
+        image_mask_list = segext_obj.get_image_masks()
+        roi_id_list = segext_obj.roi_idx
+        accepted_id_locs = [[1 if k in segext_obj.accepted_list[j] else 0 for k in range(i)]
+                            for j,i in enumerate(segext_obj.no_rois)]
+        for j, ps_loop in enumerate(ps):
+            if image_mask_list is not None:
+                [ps_loop.add_roi(id=id,image_mask=image_mask_list[j][:,:,arg_id])
+                 for arg_id, id in enumerate(roi_id_list[j])]
             else:
-                [ps_loop.add_roi(id=roiid,
-                                 image_mask=segext_obj.get_image_masks(ROI_ids=[roiid]))
-                for ps_loop in ps]
-
+                for arg_id, id in enumerate(roi_id_list[j]):
+                    pixel_mask_id = pixel_mask_list[j][pixel_mask_list[j][:,-1]==arg_id,:-1]
+                    ps_loop.add_roi(id=id, pixel_mask=pixel_mask_id)
         # adding columns to ROI table:
-        [ps_loop.add_column(name='RoiCentroid',
-                            description='x,y location of centroid of the roi in image_mask',
-                            data=np.array(segext_obj.get_roi_locations()).T)
-         for ps_loop in ps]
-        accepted = np.zeros(segext_obj.no_rois)
-        for j, i in enumerate(segext_obj.roi_idx):
-            if i in segext_obj.accepted_list:
-                accepted[j] = 1
-        [ps_loop.add_column(name='Accepted',
-                            description='1 if ROi was accepted or 0 if rejected as a cell during segmentation operation',
-                            data=accepted)
-         for ps_loop in ps]
+            ps_loop.add_column(name='RoiCentroid',
+                               description='x,y location of centroid of the roi in image_mask',
+                               data=np.array(segext_obj.get_roi_locations()[j]))
+            ps_loop.add_column(name='Accepted',
+                               description='1 if ROi was accepted or 0 if rejected as a cell during segmentation operation',
+                               data=accepted_id_locs[j])
+
+        # [ps_loop.add_column(name='RoiCentroid',
+        #                     description='x,y location of centroid of the roi in image_mask',
+        #                     data=np.array(segext_obj.get_roi_locations()[j]).T)
+        #  for j,ps_loop in enumerate(ps)]
+        # accepted = [np.zeros(segext_obj.no_rois[j]) for j in range(segext_obj.no_planes)]
+        # for j, i in enumerate(segext_obj.roi_idx):
+        #     if i in segext_obj.accepted_list:
+        #         accepted[j] = 1
+        # [ps_loop.add_column(name='Accepted',
+        #                     description='1 if ROi was accepted or 0 if rejected as a cell during segmentation operation',
+        #                     data=accepted)
+        #  for ps_loop in ps]
 
         #Fluorescence Traces:
         input_kwargs = dict(
-            rois=ps[0].create_roi_table_region('NeuronROIs', region=list(range(segext_obj.no_rois))),
             starting_time=0.0,
             rate=segext_obj.get_sampling_frequency(),
             unit='lumens'
@@ -429,13 +442,26 @@ class NwbSegmentationExtractor(SegmentationExtractor):
         container_type = [i for i in metadata_dict['Ophys'].keys() if i in ['DfOverF','Fluorescence']][0]
         f_container = eval(container_type+'()')
         ophys_mod.add_data_interface(f_container)
-        for i in metadata_dict['Ophys'][container_type]['roi_response_series']:
-            i.update(**input_kwargs,data=segext_obj.get_traces_info()[i['name']].T)
-            f_container.create_roi_response_series(**i)
+        roi_response_dict = segext_obj.roi_resp_dict
+        c=0
+        for plane_no in range(segext_obj.no_planes):
+            input_kwargs.update(rois=ps[plane_no].create_roi_table_region(
+                description=f'region for Imaging plane{plane_no}',
+                region=list(range(segext_obj.no_rois[plane_no]))))
+            for i,j in roi_response_dict.items():
+                input_kwargs.update(metadata_dict['Ophys'][container_type]['roi_response_series'][c])
+                input_kwargs.update(data=j[plane_no].T)
+                c += 1
+                f_container.create_roi_response_series(**input_kwargs)
 
-        #create Two Photon Series:
+        # for i in metadata_dict['Ophys'][container_type]['roi_response_series']:
+        #     i.update(data=segext_obj.get_traces_info()[i['name']].T)
+        #     i.update(**input_kwargs,)
+        #     f_container.create_roi_response_series(**i)
+
+        #create Two Photon Series: #TODO: need to validate of there are seperate movies for each plane
         input_kwargs = [dict(
-            name='TwoPhotonSeries',
+            name=f'TwoPhotonSeries_{i.name}',
             description='no description',
             imaging_plane=i,
             external_file=[segext_obj.get_movie_location()],
@@ -443,8 +469,8 @@ class NwbSegmentationExtractor(SegmentationExtractor):
             rate=segext_obj.get_sampling_frequency(),
             starting_time=0.0,
             starting_frame=[0],
-            dimension=segext_obj.image_dims
-        ) for i in imaging_planes]
+            dimension=segext_obj.image_dims[j]
+        ) for j,i in enumerate(imaging_planes)]
         [input_kwargs[j].update(**i) for j,i in enumerate(metadata_dict['Ophys']['TwoPhotonSeries'])]
         tps = [nwbfile.add_acquisition(TwoPhotonSeries(**i)) for i in input_kwargs]
 
@@ -452,7 +478,7 @@ class NwbSegmentationExtractor(SegmentationExtractor):
         images_dict = segext_obj.get_images()
         if images_dict is not None:
             for img_set_name, img_set in images_dict.items():
-                images = Images(img_set_name)
+                images = Images('Images'+img_set_name)
                 for img_name, img_no in img_set.items():
                     images.add_image(GrayscaleImage(name=img_name, data=img_no))
                 ophys_mod.add(images)

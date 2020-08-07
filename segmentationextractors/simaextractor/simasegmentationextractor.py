@@ -7,7 +7,7 @@ import os
 import dill
 import pickle
 from shutil import copyfile
-
+import sima
 
 class SimaSegmentationExtractor(SegmentationExtractor):
     '''
