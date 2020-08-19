@@ -1,5 +1,5 @@
 import numpy as np
-from roiextractors import SegmentationExtractor
+from ...segmentationextractor import SegmentationExtractor
 import dill
 import re
 import os
@@ -201,19 +201,6 @@ class SimaSegmentationExtractor(SegmentationExtractor):
             ele = [i for i, j in enumerate(roi_idx) if j.size == 0]
             roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
         return self.image_masks[:, :, roi_idx_]
-
-    def get_roi_pixel_masks(self, roi_ids=None):
-        if roi_ids is None:
-            roi_idx_ = self.roi_ids
-        else:
-            roi_idx = [np.where(np.array(i) == self.roi_ids)[0] for i in roi_ids]
-            ele = [i for i, j in enumerate(roi_idx) if j.size == 0]
-            roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
-        temp = np.empty((1, 4))
-        for i, roiid in enumerate(roi_idx_):
-            temp = \
-                np.append(temp, self.pixel_masks[self.pixel_masks[:, 3] == roiid, :], axis=0)
-        return temp[1::, :]
 
     def get_images(self):
         out = {'Images': dict()}
