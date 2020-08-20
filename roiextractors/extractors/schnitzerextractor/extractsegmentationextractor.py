@@ -32,10 +32,8 @@ class ExtractSegmentationExtractor(SegmentationExtractor):
         self._total_time = self._tot_exptime_extractor_read()
         self._raw_movie_file_location = self._raw_datafile_read()
         self._sampling_frequency = self._roi_response.shape[1]/self._total_time
-        # file close:
-        # self._file_close()
 
-    def _file_close(self):
+    def __del__(self):
         self._dataset_file.close()
 
     def _file_extractor_read(self):

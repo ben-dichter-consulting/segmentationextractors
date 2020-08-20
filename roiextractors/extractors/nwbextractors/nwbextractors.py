@@ -195,8 +195,8 @@ class NwbSegmentationExtractor(SegmentationExtractor):
         self.pixel_masks = None
         self._roi_locs = None
         self._accepted_list = None
-        io = NWBHDF5IO(filepath, mode='r+')
-        nwbfile = io.read()
+        self._io = NWBHDF5IO(filepath, mode='r+')
+        nwbfile = self._io.read()
         self.nwbfile = nwbfile
         _nwbchildren_type = [type(i).__name__ for i in nwbfile.all_children()]
         _nwbchildren_name = [i.name for i in nwbfile.all_children()]
@@ -267,6 +267,9 @@ class NwbSegmentationExtractor(SegmentationExtractor):
 
         #Extracting stores images as GrayscaleImages:
         self._greyscaleimages = [_nwbchildren_name[f] for f, u in enumerate(_nwbchildren_type) if u == 'GrayscaleImage']
+
+    def __del__(self):
+        self._io.close()
 
     def get_accepted_list(self):
         if self._accepted_list is None:
