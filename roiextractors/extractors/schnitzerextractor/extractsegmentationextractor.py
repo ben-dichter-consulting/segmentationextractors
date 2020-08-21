@@ -3,6 +3,8 @@ import h5py
 from ...segmentationextractor import SegmentationExtractor
 from lazy_ops import DatasetView
 from roiextractors.extraction_tools import _pixel_mask_extractor
+import os
+import shutil
 
 class ExtractSegmentationExtractor(SegmentationExtractor):
     """
@@ -30,7 +32,8 @@ class ExtractSegmentationExtractor(SegmentationExtractor):
         self._roi_response = self._trace_extractor_read()
         self._roi_response_fluorescence = self._roi_response
         self._raw_movie_file_location = self._raw_datafile_read()
-        self._sampling_frequency = self._roi_response.shape[1]/self._tot_exptime_extractor_read()
+        if self._tot_exptime_extractor_read():
+            self._sampling_frequency = self._roi_response.shape[1]/self._tot_exptime_extractor_read()
         self._images_correlation = self._summary_image_read()
 
     def __del__(self):
@@ -47,13 +50,18 @@ class ExtractSegmentationExtractor(SegmentationExtractor):
 
     def _trace_extractor_read(self):
         extracted_signals = DatasetView(self._dataset_file[self._group0[0]]['traces'])
-        return extracted_signals.T
+        return extracted_signals
 
     def _tot_exptime_extractor_read(self):
+        total_time = self._dataset_file[self._group0[0]]['time'].get('totalTime', None)
+        if total_time is None:
+            return None
         return self._dataset_file[self._group0[0]]['time']['totalTime'][0][0]
 
     def _summary_image_read(self):
-        summary_images_ = self._dataset_file[self._group0[0]]['info']['summary_image']
+        summary_images_ = self._dataset_file[self._group0[0]]['info'].get('summary_image', None)
+        if summary_images_ is None:
+            return None
         return np.array(summary_images_).T
 
     def _raw_datafile_read(self):
@@ -77,8 +85,30 @@ class ExtractSegmentationExtractor(SegmentationExtractor):
         return roi_location
 
     @staticmethod
-    def write_segmentation(segmentation_object, savepath):
-        raise NotImplementedError
+    def write_segmentation(segmentation_object, savepath, **kwargs):
+        savepath_folder = os.path.dirname(savepath)
+        if not os.path.exists(savepath_folder):
+            os.makedirs(savepath_folder)
+        else:
+            if os.path.exists(savepath):
+                os.remove(savepath)
+        if savepath.split('.')[-1] != 'mat':
+            raise ValueError('filetype to save must be *.mat')
+        with h5py.File(savepath, 'a') as f:
+            # create base groups:
+            _ = f.create_group('#refs#')
+            main = f.create_group('extractAnalysisOutput')
+            #create datasets:
+            main.create_dataset('filters',data=segmentation_object.get_roi_image_masks().T)
+            main.create_dataset('traces', data=segmentation_object.get_traces())
+            info = main.create_group('info')
+            if segmentation_object.get_images() is not None:
+                info.create_dataset('summary_image', data=segmentation_object.get_images())
+            main.create_dataset('file', data=[ord(i) for i in segmentation_object.get_movie_location()])
+            time = main.create_group('time')
+            if segmentation_object.get_sampling_frequency() is not None:
+                time.create_dataset('totalTime', (1,1), data=segmentation_object.get_roi_image_masks().shape[1]/
+                                                        segmentation_object.get_sampling_frequency())
 
     # defining the abstract class enformed methods:
     def get_roi_ids(self):
