@@ -30,9 +30,9 @@ class CaimanSegmentationExtractor(SegmentationExtractor):
         self._roi_response_fluorescence = self._roi_response
         self._roi_response_neuropil = self._trace_extractor_read('C')
         self._roi_response_deconvolved = self._trace_extractor_read('S')
-        self._images_mean = self._summary_image_read()
+        self._images_correlation = self._summary_image_read()
         self._raw_movie_file_location = self._dataset_file['params']['data']['fnames'][0].decode('utf-8')
-        self._sampling_frequency = self._dataset_file['params']['data']['fr'].value
+        self._sampling_frequency = self._dataset_file['params']['data']['fr'][()]
         self.image_masks = None
 
     def __del__(self):
@@ -162,10 +162,5 @@ class CaimanSegmentationExtractor(SegmentationExtractor):
         self.pixel_masks = _pixel_mask_extractor(self.get_roi_image_masks(roi_idx_), range(len(roi_idx_)))
         return self.pixel_masks
 
-    def get_images(self, name='mean'):
-        images = [getattr(self, i) for i in self.__dict__.keys() if name.lower() in i]
-        if images:
-            return images[0]
-
     def get_image_size(self):
-        return self._dataset_file['params']['data']['dims'].value
+        return self._dataset_file['params']['data']['dims'][()]
