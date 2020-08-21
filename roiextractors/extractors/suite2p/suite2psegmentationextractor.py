@@ -41,6 +41,8 @@ class Suite2pSegmentationExtractor(SegmentationExtractor):
         self._sampling_frequency = self.ops['fs'] * [2 if self.combined else 1][0]
         self._raw_movie_file_location = self.ops['filelist']
         self.image_masks = self.get_roi_image_masks()
+        self._images_correlation = self._summary_image_read('Vcorr')
+        self._images_mean = self._summary_image_read('meanImg')
 
     def _load_npy(self, filename, mmap_mode=None):
         fpath = os.path.join(self.filepath, f'Plane{self.plane_no}', filename)
@@ -51,6 +53,17 @@ class Suite2pSegmentationExtractor(SegmentationExtractor):
 
     def get_rejected_list(self):
         return np.where(self.iscell[:,0]==0)[0]
+
+    def _summary_image_read(self, bstr='meanImg'):
+        img = None
+        if bstr in self.ops:
+            if bstr == 'Vcorr' or bstr == 'max_proj':
+                img = np.zeros((self.ops['Ly'], self.ops['Lx']), np.float32)
+                img[self.ops['yrange'][0]:self.ops['yrange'][-1],
+                self.ops['xrange'][0]:self.ops['xrange'][-1]] = self.ops[bstr]
+            else:
+                img = self.ops[bstr]
+        return img
 
     @property
     def roi_locations(self):
