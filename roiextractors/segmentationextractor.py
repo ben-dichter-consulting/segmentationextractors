@@ -228,7 +228,10 @@ class SegmentationExtractor(ABC, BaseExtractor):
             roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
         traces = [getattr(self, i) for i in self.__dict__.keys() if name.lower() in i]
         if traces:
-            return np.array([traces[0][int(i), start_frame:end_frame] for i in roi_idx_])
+            if traces[0] is not None:
+                return np.array([traces[0][int(i), start_frame:end_frame] for i in roi_idx_])
+            else:
+                return None
         else:
             return None
 
@@ -257,7 +260,7 @@ class SegmentationExtractor(ABC, BaseExtractor):
         return dict(Correlation=self._images_correlation,
                     Mean=self._images_mean)
 
-    def get_images(self, name='mean'):
+    def get_images(self, name='correlation'):
         """
         Return specific images: mean or correlation
         Parameters
@@ -292,22 +295,6 @@ class SegmentationExtractor(ABC, BaseExtractor):
             integer number of ROIs extracted.
         """
         return len(self.get_roi_ids())
-
-    @abstractmethod
-    def get_images(self):
-        """
-        Retrieve any relevant greyscale images from the pipeline
-
-        Returns
-        -------
-        image_dict: dict
-            Keys as a list of dictionaries. Structure of the dictionary:
-            <image_group_name>:
-                -<image_name1>: <image_data1>
-                -<image_name2>: <image_data2>
-                -<image_name3>: <image_data3>
-        """
-        pass
 
     def get_channel_names(self):
         """
