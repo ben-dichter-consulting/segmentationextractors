@@ -225,18 +225,24 @@ class NwbSegmentationExtractor(SegmentationExtractor):
         # Extract Image dimensions:
 
         # Extract roi_response:
-        self._roi_response_dict = dict()
-        self._roi_names = [_nwbchildren_name[val]
+        _roi_response_dict = dict()
+        _roi_names = [_nwbchildren_name[val]
                       for val, i in enumerate(_nwbchildren_type) if i == 'RoiResponseSeries']
-        if not self._roi_names:
+        if not _roi_names:
             raise Exception('no ROI response series found')
         else:
-            for roi_name in self._roi_names:
-                self._roi_response_dict[roi_name] = mod['Fluorescence'].get_roi_response_series(roi_name).data[:].T
-        self._roi_response = self._roi_response_dict[self._roi_names[0]]
-
+            for roi_name in _roi_names:
+                _roi_response_dict[roi_name] = mod['Fluorescence'].get_roi_response_series(roi_name).data[:].T
+        self._roi_response = _roi_response_dict[_roi_names[0]]
+        for trace_names in ['roiresponseseries','neuropil','deconvolved']:
+            trace_name_find = [j for j,i in enumerate(_roi_names) if trace_names in i.lower()]
+            if trace_name_find:
+                trace_names = 'fluorescence' if trace_names == 'roiresponseseries' else trace_names
+                setattr(self,f'_roi_response_{trace_names}',
+                        mod['Fluorescence'].get_roi_response_series(_roi_names[trace_name_find[0]]).data[:].T)
+                
         # Extract samp_freq:
-        self._sampling_frequency = mod['Fluorescence'].get_roi_response_series(self._roi_names[0]).rate
+        self._sampling_frequency = mod['Fluorescence'].get_roi_response_series(_roi_names[0]).rate
         # Extract no_rois/ids:
         self._roi_idx = np.array(ps.id.data)
 
@@ -288,22 +294,6 @@ class NwbSegmentationExtractor(SegmentationExtractor):
             return None
         else:
             return self._roi_locs.data[:].T
-
-    def get_traces(self, roi_ids=None, start_frame=None, end_frame=None, name=None):
-        if name is None:
-            name = self._roi_names[0]
-            print(f'returning traces for {name}')
-        if start_frame is None:
-            start_frame = 0
-        if end_frame is None:
-            end_frame = self.get_num_frames() + 1
-        if roi_ids is None:
-            roi_idx_ = range(self.get_num_rois())
-        else:
-            roi_idx = [np.where(np.array(i) == self.roi_ids)[0] for i in roi_ids]
-            ele = [i for i, j in enumerate(roi_idx) if j.size == 0]
-            roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
-        return np.array([self._roi_response_dict[name][int(i), start_frame:end_frame] for i in roi_idx_])
 
     def get_num_frames(self):
         return self._roi_response.shape[1]
