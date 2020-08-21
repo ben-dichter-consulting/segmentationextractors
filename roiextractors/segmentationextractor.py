@@ -195,9 +195,11 @@ class SegmentationExtractor(ABC, BaseExtractor):
 
         Returns
         -------
-        pixel_masks: list
+        pixel_masks: [list, NoneType]
             list of length number of rois, each element is a 2-D array os shape (no-pixels, 2)
         """
+        if roi_ids is None:
+            return None
         return _pixel_mask_extractor(self.get_roi_image_masks(roi_ids=roi_ids), range(len(roi_ids)))
 
     @abstractmethod
@@ -325,13 +327,13 @@ class SegmentationExtractor(ABC, BaseExtractor):
         return self._raw_movie_file_location
 
     @staticmethod
-    def write_segmentation(segmentation_extractor, savepath):
+    def write_segmentation(segmentation_extractor, savepath, **kwargs):
         """
         Static method to write recording back to the native format.
 
         Parameters
         ----------
-        segmentation_extractor: SegmentationExtractor object
+        segmentation_extractor: SegmentationExtractor
             The EXTRACT segmentation object from which an EXTRACT native format
             file has to be generated.
         savepath: str
