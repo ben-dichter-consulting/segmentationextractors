@@ -29,15 +29,13 @@ class Suite2pSegmentationExtractor(SegmentationExtractor):
         self.plane_no = plane_no
         self.filepath = fileloc
         self.stat = self._load_npy('stat.npy')
-        self.F = self._load_npy('F.npy', mmap_mode='r')
-        self.Fneu = self._load_npy('Fneu.npy', mmap_mode='r')
-        self.spks = self._load_npy('spks.npy', mmap_mode='r')
+        self._roi_response = self._load_npy('F.npy', mmap_mode='r')
+        self._roi_response_fluorescence = self._roi_response
+        self._roi_response_neuropil = self._load_npy('Fneu.npy', mmap_mode='r')
+        self._roi_response_deconvolved = self._load_npy('spks.npy', mmap_mode='r')
         self.iscell = self._load_npy('iscell.npy', mmap_mode='r')
         self.ops = self._load_npy('ops.npy').item()
         self._channel_names = [f'OpticalChannel{i}' for i in range(self.ops['nchannels'])]
-        self._roi_response_dict = {'Fluorescence': self.F,
-                               'Neuropil': self.Fneu,
-                               'Deconvolved': self.spks}
         self._sampling_frequency = self.ops['fs'] * [2 if self.combined else 1][0]
         self._raw_movie_file_location = self.ops['filelist']
         self.image_masks = self.get_roi_image_masks()
@@ -91,26 +89,6 @@ class Suite2pSegmentationExtractor(SegmentationExtractor):
 
     def get_num_frames(self):
         return self.ops['nframes']
-
-    def get_traces(self, roi_ids=None, start_frame=None, end_frame=None, name='Fluorescence'):
-        if start_frame is None:
-            start_frame = 0
-        if end_frame is None:
-            end_frame = self.get_num_frames() + 1
-        if roi_ids is None:
-            roi_idx_ = range(self.get_num_rois())
-        else:
-            roi_idx = [np.where(np.array(i) == self.roi_ids)[0] for i in roi_ids]
-            ele = [i for i, j in enumerate(roi_idx) if j.size == 0]
-            roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
-        if name == 'Fluorescence':
-            return self.F[[roi_idx_], start_frame:end_frame]
-        if name == 'Neuropil':
-            return self.Fneu[[roi_idx_], start_frame:end_frame]
-        if name == 'Deconvolved':
-            return self.spks[[roi_idx_], start_frame:end_frame]
-        else:
-            return None
 
     def get_roi_image_masks(self, roi_ids=None):
         if roi_ids is None:
