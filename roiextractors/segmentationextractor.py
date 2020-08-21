@@ -20,6 +20,11 @@ class SegmentationExtractor(ABC, BaseExtractor):
         self._channel_names = ['OpticalChannel']
         self._raw_movie_file_location = ''
         self.no_planes = 1
+        self._roi_response_fluorescence = None
+        self._roi_response_neuropil = None
+        self._roi_response_deconvolved = None
+        self._images_correlation = None
+        self._images_mean = None
 
     @property
     def image_size(self):
@@ -227,7 +232,37 @@ class SegmentationExtractor(ABC, BaseExtractor):
             dictionary with key, values representing different types of RoiResponseSeries
             Flourescence, Neuropil, Deconvolved, Background etc
         """
-        return self._roi_response_dict
+        return dict(Fluorescence=self._roi_response_fluorescence,
+                    Neuropil=self._roi_response_neuropil,
+                    Deconvolved=self._roi_response_deconvolved)
+
+    def get_images_dict(self):
+        """
+        Returns traces as a dictionary with key as the name of the ROiResponseSeries
+        Returns
+        -------
+        _roi_response_dict: dict
+            dictionary with key, values representing different types of Images used in segmentation:
+            Mean, Correlation image
+        """
+        return dict(Correlation=self._images_correlation,
+                    Mean=self._images_mean)
+
+    def get_images(self, name='mean'):
+        """
+        Return specific images: mean or correlation
+        Parameters
+        ----------
+        name:str
+            name of the type of image to retrieve
+        Returns
+        -------
+        images: np.ndarray
+        """
+        images = [getattr(self, i) for i in self.__dict__.keys() if name.lower() in i]
+        if images:
+            return images[0]
+
 
     def get_sampling_frequency(self):
         """This function returns the sampling frequency in units of Hz.

@@ -96,8 +96,8 @@ class NumpySegmentationExtractor(SegmentationExtractor):
 
     def __init__(self, image_masks, signal,
                  rawfileloc=None, accepted_lst=None,
-                 summary_image=None, roi_idx=None,
-                 roi_locs=None, samp_freq=None,
+                 mean_image=None, correlation_image=None,
+                 roi_idx=None, roi_locs=None, samp_freq=None,
                  rejected_list=None, channel_names=None,
                  movie_dims=None):
         """
@@ -109,8 +109,10 @@ class NumpySegmentationExtractor(SegmentationExtractor):
             Binary image for each of the regions of interest
         signal: np.ndarray
             Fluorescence response of each of the ROI in time
-        summary_image: np.ndarray
-            Mean or the correlation image
+        mean_image: np.ndarray
+            Mean image
+        correlation_image: np.ndarray
+            correlation image
         roi_idx: int list
             Unique ids of the ROIs if any
         roi_locs: np.ndarray
@@ -129,7 +131,8 @@ class NumpySegmentationExtractor(SegmentationExtractor):
         self._roi_response = signal
         self._roi_response_dict = {'Fluorescence': self._roi_response}
         self._movie_dims = movie_dims if movie_dims is not None else image_masks.shape
-        self._summary_image = summary_image
+        self._images_mean = mean_image
+        self._images_correlation = correlation_image
         self._raw_movie_file_location = rawfileloc
         self._roi_ids = roi_idx
         self._roi_locs = roi_locs
@@ -214,9 +217,6 @@ class NumpySegmentationExtractor(SegmentationExtractor):
             ele = [i for i, j in enumerate(roi_idx) if j.size == 0]
             roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
         return self.image_masks[:, :, roi_idx_]
-
-    def get_images(self):
-        return {'Images': {'meanImg': self._summary_image}}
 
     def get_image_size(self):
         return self._movie_dims

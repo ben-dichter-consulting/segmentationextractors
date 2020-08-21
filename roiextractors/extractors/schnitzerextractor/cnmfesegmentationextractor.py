@@ -119,8 +119,5 @@ class CnmfeSegmentationExtractor(SegmentationExtractor):
             roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
         return np.array([self.image_masks[:, :, int(i)].T for i in roi_idx_]).T
 
-    def get_images(self):
-        return {'Images': {'meanImg': self._summary_image_read()}}
-
     def get_image_size(self):
         return self.image_masks.shape[0:2]

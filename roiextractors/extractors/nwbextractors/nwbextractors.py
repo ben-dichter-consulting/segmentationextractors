@@ -266,7 +266,9 @@ class NwbSegmentationExtractor(SegmentationExtractor):
             self.property_vals.append(np.array(ps[i].data))
 
         #Extracting stores images as GrayscaleImages:
-        self._greyscaleimages = [_nwbchildren_name[f] for f, u in enumerate(_nwbchildren_type) if u == 'GrayscaleImage']
+        _greyscaleimages = [i for i in nwbfile.all_children() if type(i).__name__ == 'GrayscaleImage']
+        self._images_correlation = [i.data for i in _greyscaleimages if 'corr' in i.name.lower()][0]
+        self._images_mean = [i.data for i in _greyscaleimages if 'mean' in i.name.lower()][0]
 
     def __del__(self):
         self._io.close()
@@ -331,15 +333,6 @@ class NwbSegmentationExtractor(SegmentationExtractor):
             ele = [i for i, j in enumerate(roi_idx) if j.size == 0]
             roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
         return np.array([self.image_masks[:, :, int(i)].T for i in roi_idx_]).T
-
-    def get_images(self):
-        imag_dict = {i.name: np.array(i.data) for i in self.nwbfile.all_children() if i.name in self._greyscaleimages}
-        _ = {i.name: i for i in self.nwbfile.all_children() if i.name in self._greyscaleimages}
-        if imag_dict:
-            parent_name = _[self._greyscaleimages[0]].parent.name
-            return {parent_name: imag_dict}
-        else:
-            return None
 
     def get_image_size(self):
         return self._extimage_dims
@@ -474,13 +467,11 @@ class NwbSegmentationExtractor(SegmentationExtractor):
         tps = [nwbfile.add_acquisition(TwoPhotonSeries(**i)) for i in input_kwargs]
 
         # adding images:
-        images_dict = segext_obj.get_images()
-        if images_dict is not None:
-            for img_set_name, img_set in images_dict.items():
-                images = Images(img_set_name)
-                for img_name, img_no in img_set.items():
-                    images.add_image(GrayscaleImage(name=img_name, data=img_no))
-                ophys_mod.add(images)
+        images_dict = segext_obj.get_images_dict()
+        images = Images('SegmentationImages')
+        for img_name, img_no in images_dict.items():
+            images.add_image(GrayscaleImage(name=img_name, data=img_no))
+        ophys_mod.add(images)
 
         # saving NWB file:
         with NWBHDF5IO(savepath, 'w') as io:

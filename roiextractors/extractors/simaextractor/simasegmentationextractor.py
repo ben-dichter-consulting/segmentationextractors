@@ -202,11 +202,5 @@ class SimaSegmentationExtractor(SegmentationExtractor):
             roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
         return self.image_masks[:, :, roi_idx_]
 
-    def get_images(self):
-        out = {'Images': dict()}
-        for j,i in enumerate(self._channel_names):
-            out['Images'].update({f'meanImg_{i}': self._summary_image_read()[:,:,j]})
-        return out
-
     def get_image_size(self):
         return self.image_masks.shape[0:2]
