@@ -192,7 +192,6 @@ class NwbSegmentationExtractor(SegmentationExtractor):
 
         self.filepath = filepath
         self.image_masks = None
-        self.pixel_masks = None
         self._roi_locs = None
         self._accepted_list = None
         self._io = NWBHDF5IO(filepath, mode='r+')
@@ -273,8 +272,8 @@ class NwbSegmentationExtractor(SegmentationExtractor):
 
         #Extracting stores images as GrayscaleImages:
         _greyscaleimages = [i for i in nwbfile.all_children() if type(i).__name__ == 'GrayscaleImage']
-        self._images_correlation = [i.data for i in _greyscaleimages if 'corr' in i.name.lower()][0]
-        self._images_mean = [i.data for i in _greyscaleimages if 'mean' in i.name.lower()][0]
+        self._images_correlation = [i.data[()] for i in _greyscaleimages if 'corr' in i.name.lower()][0]
+        self._images_mean = [i.data[()] for i in _greyscaleimages if 'mean' in i.name.lower()][0]
 
     def __del__(self):
         self._io.close()
