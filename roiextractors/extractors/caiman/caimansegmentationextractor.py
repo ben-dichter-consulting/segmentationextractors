@@ -83,7 +83,7 @@ class CaimanSegmentationExtractor(SegmentationExtractor):
         return roi_location
 
     @staticmethod
-    def write_segmentation(segmentation_object, savepath):
+    def write_segmentation(segmentation_object, savepath, **kwargs):
         from scipy.sparse import csc_matrix
         if savepath.split('.')[-1]!='hdf5':
             raise ValueError('filetype to save must be *.hdf5')
