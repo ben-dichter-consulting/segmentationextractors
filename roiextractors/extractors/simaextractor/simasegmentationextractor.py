@@ -189,5 +189,8 @@ class SimaSegmentationExtractor(SegmentationExtractor):
             roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
         return self.image_masks[:, :, roi_idx_]
 
+    def get_images(self, name='mean'):
+        return super(SimaSegmentationExtractor, self).get_images(name=name)
+
     def get_image_size(self):
         return self.image_masks.shape[0:2]
