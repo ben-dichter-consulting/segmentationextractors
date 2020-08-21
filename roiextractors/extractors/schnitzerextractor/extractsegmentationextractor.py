@@ -29,9 +29,8 @@ class ExtractSegmentationExtractor(SegmentationExtractor):
         self.image_masks = self._image_mask_extractor_read()
         self._roi_response = self._trace_extractor_read()
         self._roi_response_fluorescence = self._roi_response
-        self._total_time = self._tot_exptime_extractor_read()
         self._raw_movie_file_location = self._raw_datafile_read()
-        self._sampling_frequency = self._roi_response.shape[1]/self._total_time
+        self._sampling_frequency = self._roi_response.shape[1]/self._tot_exptime_extractor_read()
         self._images_correlation = self._summary_image_read()
 
     def __del__(self):
@@ -108,6 +107,6 @@ class ExtractSegmentationExtractor(SegmentationExtractor):
             ele = [i for i, j in enumerate(roi_idx) if j.size == 0]
             roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
         return np.array([self.image_masks[:, :, int(i)].T for i in roi_idx_]).T
-    
+
     def get_image_size(self):
         return self.image_masks.shape[0:2]
