@@ -19,12 +19,15 @@ class SegmentationExtractor(ABC, BaseExtractor):
         self._sampling_frequency = np.float('NaN')
         self._channel_names = ['OpticalChannel']
         self._raw_movie_file_location = ''
-        self.no_planes = 1
         self._roi_response_fluorescence = None
         self._roi_response_neuropil = None
         self._roi_response_deconvolved = None
         self._images_correlation = None
         self._images_mean = None
+
+    @property
+    def no_planes(self):
+        return 1
 
     @property
     def image_size(self):
