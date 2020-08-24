@@ -86,7 +86,10 @@ class ExtractSegmentationExtractor(SegmentationExtractor):
 
     @staticmethod
     def write_segmentation(segmentation_object, savepath, **kwargs):
-        savepath_folder = os.path.dirname(savepath)
+        plane_no = kwargs.get('plane_no', 0)
+        filename = os.path.basename(savepath)
+        savepath_folder = os.path.join(os.path.dirname(savepath), f'Plane_{plane_no}')
+        savepath = os.path.join(savepath_folder, filename)
         if not os.path.exists(savepath_folder):
             os.makedirs(savepath_folder)
         else:
