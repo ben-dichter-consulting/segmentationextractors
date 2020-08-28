@@ -3,6 +3,9 @@ from spikeextractors.baseextractor import BaseExtractor
 import numpy as np
 from .extraction_tools import ArrayType
 from .extraction_tools import _pixel_mask_extractor
+from copy import deepcopy
+import warnings
+
 
 class SegmentationExtractor(ABC, BaseExtractor):
     """
@@ -23,18 +26,14 @@ class SegmentationExtractor(ABC, BaseExtractor):
         self._roi_response_raw_dff = None
         self._roi_response_neuropil = None
         self._roi_response_deconvolved = None
-        self._images_correlation = None
-        self._images_mean = None
-
-    @property
-    def image_size(self):
-        """
-        Returns
-        -------
-        image_dims: list
-            The width X height of the image.
-        """
-        return self.get_image_size()
+        self._image_correlation = None
+        self._image_mean = None
+        self._roi_response_dict = dict(raw=self._roi_response_raw,
+                                       dff=self._roi_response_raw_dff,
+                                       neuropil=self._roi_response_neuropil,
+                                       deconvolved=self._roi_response_deconvolved)
+        self._images_dict = dict(mean=self._image_mean,
+                                 correlation=self._image_correlation)
 
     @abstractmethod
     def _calculate_roi_locations(self):
@@ -160,7 +159,7 @@ class SegmentationExtractor(ABC, BaseExtractor):
         """
         pass
 
-    def get_traces(self, roi_ids=None, start_frame=None, end_frame=None, name='Fluorescence'):
+    def get_traces(self, roi_ids=None, start_frame=None, end_frame=None, name='raw'):
         """
         Return RoiResponseSeries
         Returns
@@ -192,9 +191,7 @@ class SegmentationExtractor(ABC, BaseExtractor):
             dictionary with key, values representing different types of RoiResponseSeries
             Flourescence, Neuropil, Deconvolved, Background etc
         """
-        return dict(Fluorescence=self._roi_response_fluorescence,
-                    Neuropil=self._roi_response_neuropil,
-                    Deconvolved=self._roi_response_deconvolved)
+        return deepcopy(self._roi_response_dict)
 
     def get_images_dict(self):
         """
@@ -205,8 +202,7 @@ class SegmentationExtractor(ABC, BaseExtractor):
             dictionary with key, values representing different types of Images used in segmentation:
             Mean, Correlation image
         """
-        return dict(Correlation=self._images_correlation,
-                    Mean=self._images_mean)
+        return self._images_dict
 
     def get_images(self, name='correlation'):
         """
@@ -219,10 +215,11 @@ class SegmentationExtractor(ABC, BaseExtractor):
         -------
         images: np.ndarray
         """
-        images = [getattr(self, i) for i in self.__dict__.keys() if name.lower() in i]
-        if images:
-            return images[0]
-
+        image = self._images_dict.get(name)
+        if image:
+            return image
+        else:
+            warnings.warn(f'cound not find {name} image, enter one of {list(self._images_dict.keys())}')
 
     def get_sampling_frequency(self):
         """This function returns the sampling frequency in units of Hz.
