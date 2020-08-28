@@ -130,8 +130,8 @@ class NumpySegmentationExtractor(SegmentationExtractor):
         self.image_masks = image_masks
         self._roi_response_raw = signal
         self._movie_dims = movie_dims if movie_dims is not None else image_masks.shape
-        self._images_mean = mean_image
-        self._images_correlation = correlation_image
+        self._image_mean = mean_image
+        self._image_correlation = correlation_image
         self._raw_movie_file_location = rawfileloc
         self._roi_ids = roi_idx
         self._roi_locs = roi_locs

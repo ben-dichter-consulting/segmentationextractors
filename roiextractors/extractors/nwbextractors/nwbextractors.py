@@ -272,8 +272,8 @@ class NwbSegmentationExtractor(SegmentationExtractor):
 
         #Extracting stores images as GrayscaleImages:
         _greyscaleimages = [i for i in nwbfile.all_children() if type(i).__name__ == 'GrayscaleImage']
-        self._images_correlation = [i.data[()] for i in _greyscaleimages if 'corr' in i.name.lower()][0]
-        self._images_mean = [i.data[()] for i in _greyscaleimages if 'mean' in i.name.lower()][0]
+        self._image_correlation = [i.data[()] for i in _greyscaleimages if 'corr' in i.name.lower()][0]
+        self._image_mean = [i.data[()] for i in _greyscaleimages if 'mean' in i.name.lower()][0]
 
     def __del__(self):
         self._io.close()

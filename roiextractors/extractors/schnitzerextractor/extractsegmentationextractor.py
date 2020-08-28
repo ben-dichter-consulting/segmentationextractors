@@ -29,8 +29,8 @@ class ExtractSegmentationExtractor(SegmentationExtractor):
         self.image_masks = self._image_mask_extractor_read()
         self._roi_response_raw = self._trace_extractor_read()
         self._raw_movie_file_location = self._raw_datafile_read()
-        self._sampling_frequency = self._roi_response.shape[1]/self._tot_exptime_extractor_read()
-        self._images_correlation = self._summary_image_read()
+        self._sampling_frequency = self._roi_response_raw.shape[1]/self._tot_exptime_extractor_read()
+        self._image_correlation = self._summary_image_read()
 
     def __del__(self):
         self._dataset_file.close()

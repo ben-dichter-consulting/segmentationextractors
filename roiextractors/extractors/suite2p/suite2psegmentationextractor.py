@@ -38,8 +38,8 @@ class Suite2pSegmentationExtractor(SegmentationExtractor):
         self._sampling_frequency = self.ops['fs'] * [2 if self.combined else 1][0]
         self._raw_movie_file_location = self.ops['filelist'][0]
         self.image_masks = self.get_roi_image_masks()
-        self._images_correlation = self._summary_image_read('Vcorr')
-        self._images_mean = self._summary_image_read('meanImg')
+        self._image_correlation = self._summary_image_read('Vcorr')
+        self._image_mean = self._summary_image_read('meanImg')
 
     def _load_npy(self, filename, mmap_mode=None):
         fpath = os.path.join(self.file_path, f'Plane{self.plane_no}', filename)
