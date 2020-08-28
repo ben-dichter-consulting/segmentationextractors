@@ -232,7 +232,7 @@ class NwbSegmentationExtractor(SegmentationExtractor):
         else:
             for roi_name in _roi_names:
                 _roi_response_dict[roi_name] = mod['Fluorescence'].get_roi_response_series(roi_name).data[:].T
-        self._roi_response = _roi_response_dict[_roi_names[0]]
+        self._roi_response_raw = _roi_response_dict[_roi_names[0]]
         for trace_names in ['roiresponseseries','neuropil','deconvolved']:
             trace_name_find = [j for j,i in enumerate(_roi_names) if trace_names in i.lower()]
             if trace_name_find:
@@ -294,7 +294,7 @@ class NwbSegmentationExtractor(SegmentationExtractor):
             return self._roi_locs.data[:].T
 
     def get_num_frames(self):
-        return self._roi_response.shape[1]
+        return self._roi_response_raw.shape[1]
 
     def get_roi_locations(self, roi_ids=None):
         if roi_ids is None:

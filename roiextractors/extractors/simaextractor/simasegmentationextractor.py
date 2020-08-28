@@ -45,10 +45,9 @@ class SimaSegmentationExtractor(SegmentationExtractor):
         self._num_of_channels = len(self._channel_names)
         self.sima_segmentation_label = sima_segmentation_label
         self.image_masks = self._image_mask_extractor_read()
-        self.pixel_masks = _pixel_mask_extractor(self.image_masks, self.roi_ids)
-        self._roi_response = self._trace_extractor_read()
-        self._roi_response_fluorescence = self._roi_response
-        self._images_mean = self._summary_image_read()
+        self.pixel_masks = _pixel_mask_extractor(self.image_masks, self.get_roi_ids())
+        self._roi_response_raw = self._trace_extractor_read()
+        self._image_mean = self._summary_image_read()
 
     @staticmethod
     def _convert_sima(old_pkl_loc):
@@ -177,7 +176,7 @@ class SimaSegmentationExtractor(SegmentationExtractor):
             return self._calculate_roi_locations()[:, roi_idx_]
 
     def get_num_frames(self):
-        return self._roi_response.shape[1]
+        return self._roi_response_raw.shape[1]
 
     def get_roi_image_masks(self, roi_ids=None):
         if roi_ids is None:

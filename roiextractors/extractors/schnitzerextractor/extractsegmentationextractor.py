@@ -27,8 +27,7 @@ class ExtractSegmentationExtractor(SegmentationExtractor):
         self.file_path = file_path
         self._dataset_file, self._group0 = self._file_extractor_read()
         self.image_masks = self._image_mask_extractor_read()
-        self._roi_response = self._trace_extractor_read()
-        self._roi_response_fluorescence = self._roi_response
+        self._roi_response_raw = self._trace_extractor_read()
         self._raw_movie_file_location = self._raw_datafile_read()
         self._sampling_frequency = self._roi_response.shape[1]/self._tot_exptime_extractor_read()
         self._images_correlation = self._summary_image_read()
@@ -84,7 +83,7 @@ class ExtractSegmentationExtractor(SegmentationExtractor):
         return list(range(self.get_num_rois()))
 
     def get_num_rois(self):
-        return self._roi_response.shape[0]
+        return self._roi_response_raw.shape[0]
 
     def get_roi_locations(self, roi_ids=None):
         if roi_ids is None:
@@ -96,7 +95,7 @@ class ExtractSegmentationExtractor(SegmentationExtractor):
             return self._calculate_roi_locations()[:, roi_idx_]
 
     def get_num_frames(self):
-        return self._roi_response.shape[1]
+        return self._roi_response_raw.shape[1]
 
     def get_roi_image_masks(self, roi_ids=None):
         if roi_ids is None:

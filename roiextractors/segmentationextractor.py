@@ -18,9 +18,9 @@ class SegmentationExtractor(ABC, BaseExtractor):
         BaseExtractor.__init__(self)
         self._sampling_frequency = np.float('NaN')
         self._channel_names = ['OpticalChannel']
-        self._raw_movie_file_location = ''
-        self.no_planes = 1
-        self._roi_response_fluorescence = None
+        self._num_planes = 1
+        self._roi_response_raw = None
+        self._roi_response_raw_dff = None
         self._roi_response_neuropil = None
         self._roi_response_deconvolved = None
         self._images_correlation = None
@@ -171,15 +171,15 @@ class SegmentationExtractor(ABC, BaseExtractor):
         if roi_ids is None:
             roi_idx_ = range(self.get_num_rois())
         else:
-            roi_idx = [np.where(np.array(i) == self.roi_ids)[0] for i in roi_ids]
+            roi_idx = [np.where(np.array(i) == self.get_roi_ids())[0] for i in roi_ids]
             ele = [i for i, j in enumerate(roi_idx) if j.size == 0]
             roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
-        traces = [getattr(self, i) for i in self.__dict__.keys() if name.lower() in i]
+        traces = self._roi_response_dict.get(name, 'not found')
+        if traces == 'not found':
+            print(f'traces for {name} not found, enter one of {list(self._roi_response_dict.keys())}')
+            return None
         if traces:
-            if traces[0] is not None:
-                return np.array([traces[0][int(i), start_frame:end_frame] for i in roi_idx_])
-            else:
-                return None
+            return np.array([traces[int(i), start_frame:end_frame] for i in roi_idx_])
         else:
             return None
 

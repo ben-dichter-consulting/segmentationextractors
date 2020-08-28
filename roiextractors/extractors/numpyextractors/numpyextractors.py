@@ -128,8 +128,7 @@ class NumpySegmentationExtractor(SegmentationExtractor):
         """
         SegmentationExtractor.__init__(self)
         self.image_masks = image_masks
-        self._roi_response = signal
-        self._roi_response_fluorescence = self._roi_response
+        self._roi_response_raw = signal
         self._movie_dims = movie_dims if movie_dims is not None else image_masks.shape
         self._images_mean = mean_image
         self._images_correlation = correlation_image
@@ -193,7 +192,7 @@ class NumpySegmentationExtractor(SegmentationExtractor):
             return self._calculate_roi_locations()[:, roi_idx_]
 
     def get_num_frames(self):
-        return self._roi_response.shape[1]
+        return self._roi_response_raw.shape[1]
 
     def get_roi_image_masks(self, roi_ids=None):
         if roi_ids is None:

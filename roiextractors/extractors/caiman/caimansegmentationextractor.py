@@ -28,11 +28,10 @@ class CaimanSegmentationExtractor(SegmentationExtractor):
         SegmentationExtractor.__init__(self)
         self.file_path = file_path
         self._dataset_file = self._file_extractor_read()
-        self._roi_response = self._trace_extractor_read('F_dff')
-        self._roi_response_fluorescence = self._roi_response
-        self._roi_response_neuropil = self._trace_extractor_read('C')
-        self._roi_response_deconvolved = self._trace_extractor_read('S')
-        self._images_correlation = self._summary_image_read()
+        self._roi_response_raw_dff = self._trace_extractor_read('F_dff')
+        self._roi_response_raw_neuropil = self._trace_extractor_read('C')
+        self._roi_response_raw_deconvolved = self._trace_extractor_read('S')
+        self._image_correlation = self._summary_image_read()
         self._raw_movie_file_location = self._dataset_file['params']['data']['fnames'][0].decode('utf-8')
         self._sampling_frequency = self._dataset_file['params']['data']['fr'][()]
         self.image_masks = self._image_mask_sparse_read()[-1]
@@ -131,7 +130,7 @@ class CaimanSegmentationExtractor(SegmentationExtractor):
         return list(range(self.get_num_rois()))
 
     def get_num_rois(self):
-        return self._roi_response.shape[0]
+        return self._roi_response_raw.shape[0]
 
     def get_roi_locations(self, roi_ids=None):
         if roi_ids is None:
@@ -143,7 +142,7 @@ class CaimanSegmentationExtractor(SegmentationExtractor):
             return self._calculate_roi_locations()[:, roi_idx_]
 
     def get_num_frames(self):
-        return self._roi_response.shape[1]
+        return self._roi_response_raw.shape[1]
 
     def get_roi_image_masks(self, roi_ids=None):
         if roi_ids is None:
