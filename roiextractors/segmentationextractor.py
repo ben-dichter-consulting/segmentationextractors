@@ -260,14 +260,15 @@ class SegmentationExtractor(ABC, BaseExtractor):
         """
         return len(self._channel_names)
 
-    def get_movie_location(self):
+    def get_num_planes(self):
         """
-        Local disc location of the raw movie
+        Returns the default number of planes of imaging for the segmentation extractor.
+        Detaults to 1 for all but the MultiSegmentationExtractor
         Returns
         -------
-        _raw_movie_file_location: str
+        self._num_planes: int
         """
-        return self._raw_movie_file_location
+        return self._num_planes
 
     @staticmethod
     def write_segmentation(segmentation_extractor, save_path, plane_num, **kwargs):
