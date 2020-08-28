@@ -415,9 +415,10 @@ class NwbSegmentationExtractor(SegmentationExtractor):
                                data=accepted_id_locs[j])
 
         # Fluorescence Traces:
+        rate = np.float('NaN') if segext_obj.get_sampling_frequency() is None else segext_obj.get_sampling_frequency()
         input_kwargs = dict(
             starting_time=0.0,
-            rate=segext_obj.get_sampling_frequency(),
+            rate=rate,
             unit='lumens'
         )
         container_type = [i for i in metadata['ophys'].keys() if i in ['DfOverF','Fluorescence']][0]

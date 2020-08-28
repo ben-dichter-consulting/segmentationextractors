@@ -19,7 +19,7 @@ class SegmentationExtractor(ABC, BaseExtractor):
 
     def __init__(self):
         BaseExtractor.__init__(self)
-        self._sampling_frequency = np.float('NaN')
+        self._sampling_frequency = None
         self._channel_names = ['OpticalChannel']
         self._num_planes = 1
         self._roi_response_raw = None
