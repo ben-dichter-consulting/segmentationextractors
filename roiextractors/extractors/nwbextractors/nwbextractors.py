@@ -81,7 +81,7 @@ class NwbImagingExtractor(ImagingExtractor):
     mode = 'file'
     installation_mesg = "To use the Nwb Extractor run:\n\n pip install pynwb\n\n"  # error message when not installed
 
-    def __init__(self, filepath, optical_channel_name=None,
+    def __init__(self, file_path, optical_channel_name=None,
                  imaging_plane_name=None, image_series_name=None,
                  processing_module_name=None,
                  neuron_roi_response_series_name=None,
@@ -89,7 +89,7 @@ class NwbImagingExtractor(ImagingExtractor):
         """
         Parameters
         ----------
-        filepath: str
+        file_path: str
             The location of the folder containing dataset.nwb file.
         optical_channel_name: str(optional)
             optical channel to extract data from
@@ -159,13 +159,13 @@ class NwbImagingExtractor(ImagingExtractor):
 
         Returns
         -------
-        no_of_channels: int
+        num_of_channels: int
             integer count of number of channels
         """
         return self._num_channels
 
     @staticmethod
-    def write_imaging(imaging, savepath):
+    def write_imaging(imaging, save_path):
         pass
 
 
@@ -177,24 +177,24 @@ class NwbSegmentationExtractor(SegmentationExtractor):
     mode = 'file'
     installation_mesg = ""  # error message when not installed
 
-    def __init__(self, filepath):
+    def __init__(self, file_path):
         """
         Creating NwbSegmentationExtractor object from nwb file
         Parameters
         ----------
-        filepath: str
+        file_path: str
             .nwb file location
         """
         check_nwb_install()
         SegmentationExtractor.__init__(self)
-        if not os.path.exists(filepath):
+        if not os.path.exists(file_path):
             raise Exception('file does not exist')
 
-        self.filepath = filepath
+        self.file_path = file_path
         self.image_masks = None
         self._roi_locs = None
         self._accepted_list = None
-        self._io = NWBHDF5IO(filepath, mode='r+')
+        self._io = NWBHDF5IO(file_path, mode='r+')
         nwbfile = self._io.read()
         self.nwbfile = nwbfile
         _nwbchildren_type = [type(i).__name__ for i in nwbfile.all_children()]
@@ -242,7 +242,7 @@ class NwbSegmentationExtractor(SegmentationExtractor):
                 
         # Extract samp_freq:
         self._sampling_frequency = mod['Fluorescence'].get_roi_response_series(_roi_names[0]).rate
-        # Extract no_rois/ids:
+        # Extract get_num_rois()/ids:
         self._roi_idx = np.array(ps.id.data)
 
         # Imaging plane:
@@ -337,8 +337,7 @@ class NwbSegmentationExtractor(SegmentationExtractor):
         return ret_val
 
     @staticmethod
-    def write_segmentation(segext_obj, savepath, metadata, **kwargs):
-        source_path = segext_obj.filepath
+    def write_segmentation(segext_obj, save_path, metadata, **kwargs):
         print(f'writing nwb for {segext_obj.extractor_name}\n')
         if isinstance(metadata, str):
             with open(metadata, 'r') as f:
@@ -463,9 +462,9 @@ class NwbSegmentationExtractor(SegmentationExtractor):
         ophys_mod.add(images)
 
         # saving NWB file:
-        with NWBHDF5IO(savepath, 'w') as io:
+        with NWBHDF5IO(save_path, 'w') as io:
             io.write(nwbfile)
 
         # test read
-        with NWBHDF5IO(savepath, 'r') as io:
+        with NWBHDF5IO(save_path, 'r') as io:
             io.read()

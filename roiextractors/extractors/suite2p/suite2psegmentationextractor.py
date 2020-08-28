@@ -27,7 +27,7 @@ class Suite2pSegmentationExtractor(SegmentationExtractor):
         SegmentationExtractor.__init__(self)
         self.combined = combined
         self.plane_no = plane_no
-        self.filepath = fileloc
+        self.file_path = fileloc
         self.stat = self._load_npy('stat.npy')
         self._roi_response = self._load_npy('F.npy', mmap_mode='r')
         self._roi_response_fluorescence = self._roi_response
@@ -43,7 +43,7 @@ class Suite2pSegmentationExtractor(SegmentationExtractor):
         self._images_mean = self._summary_image_read('meanImg')
 
     def _load_npy(self, filename, mmap_mode=None):
-        fpath = os.path.join(self.filepath, f'Plane{self.plane_no}', filename)
+        fpath = os.path.join(self.file_path, f'Plane{self.plane_no}', filename)
         return np.load(fpath, mmap_mode=mmap_mode)
 
     def get_accepted_list(self):
@@ -101,7 +101,7 @@ class Suite2pSegmentationExtractor(SegmentationExtractor):
 
     def get_roi_pixel_masks(self, roi_ids=None):
         pixel_mask = []
-        for i in range(self.no_rois):
+        for i in range(self.get_num_rois()):
             pixel_mask.append(np.vstack([self.stat[i]['ypix'],
                                       self.stat[i]['xpix'],
                                       self.stat[i]['lam']]).T)

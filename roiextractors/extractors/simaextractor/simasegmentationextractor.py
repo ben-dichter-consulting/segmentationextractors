@@ -26,11 +26,11 @@ class SimaSegmentationExtractor(SegmentationExtractor):
     mode = 'file'
     installation_mesg = "To use the SimaSegmentationExtractor install sima: \n\n pip install sima\n\n"  # error message when not installed
 
-    def __init__(self, filepath, sima_segmentation_label='auto_ROIs'):
+    def __init__(self, file_path, sima_segmentation_label='auto_ROIs'):
         """
         Parameters
         ----------
-        filepath: str
+        file_path: str
             The location of the folder containing dataset.sima file and the raw
             image file(s) (tiff, h5, .zip)
         sima_segmentation_label: str
@@ -38,11 +38,11 @@ class SimaSegmentationExtractor(SegmentationExtractor):
         """
         assert HAVE_SIMA, self.installation_mesg
         SegmentationExtractor.__init__(self)
-        self.filepath = filepath
-        self._convert_sima(filepath)
+        self.file_path = file_path
+        self._convert_sima(file_path)
         self._dataset_file = self._file_extractor_read()
         self._channel_names = [str(i) for i in self._dataset_file.channel_names]
-        self._no_of_channels = len(self._channel_names)
+        self._num_of_channels = len(self._channel_names)
         self.sima_segmentation_label = sima_segmentation_label
         self.image_masks = self._image_mask_extractor_read()
         self.pixel_masks = _pixel_mask_extractor(self.image_masks, self.roi_ids)
@@ -93,8 +93,8 @@ class SimaSegmentationExtractor(SegmentationExtractor):
                         pickle.dump(loaded, outfile)
 
     def _file_extractor_read(self):
-        _img_dataset = sima.ImagingDataset.load(self.filepath)
-        _img_dataset._savedir = self.filepath
+        _img_dataset = sima.ImagingDataset.load(self.file_path)
+        _img_dataset._savedir = self.file_path
         return _img_dataset
 
     def _image_mask_extractor_read(self):
@@ -120,7 +120,7 @@ class SimaSegmentationExtractor(SegmentationExtractor):
                     _active_channel = channel_now
                     break
             print('extracting signal from channel {} from {} no of channels'.
-                  format(_active_channel, self._no_of_channels))
+                  format(_active_channel, self._num_of_channels))
         # label for the extraction method in SIMA:
         for labels in self._dataset_file.signals(channel=_active_channel):
             _count = 0
@@ -151,14 +151,14 @@ class SimaSegmentationExtractor(SegmentationExtractor):
     def roi_locations(self):
         no_ROIs = self.no_rois
         raw_images = self.image_masks
-        roi_location = np.ndarray([2, no_ROIs], dtype='int')
-        for i in range(no_ROIs):
+        roi_location = np.ndarray([2, num_ROIs], dtype='int')
+        for i in range(num_ROIs):
             temp = np.where(raw_images[:, :, i] == np.amax(raw_images[:, :, i]))
             roi_location[:, i] = np.array([np.median(temp[0]), np.median(temp[1])]).T
         return roi_location
 
     @staticmethod
-    def write_segmentation(segmentation_object, savepath):
+    def write_segmentation(segmentation_object, save_path):
         raise NotImplementedError
 
     # defining the abstract class enformed methods:

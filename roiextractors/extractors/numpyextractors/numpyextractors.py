@@ -11,10 +11,10 @@ class NumpyImagingExtractor(ImagingExtractor):
                  channel_names=None):
 
         ImagingExtractor.__init__(self)
-        self.filepath = Path(file_path)
+        self.file_path = Path(file_path)
         self._sampling_frequency = sampling_frequency
-        assert self.filepath.suffix == '.npy'
-        self._video = np.load(self.filepath, mmap_mode='r')
+        assert self.file_path.suffix == '.npy'
+        self._video = np.load(self.file_path, mmap_mode='r')
         self._channel_names = channel_names
 
         self._num_channels, self._num_frames, self._size_x, self._size_y = get_video_shape(self._video)
@@ -74,7 +74,7 @@ class NumpyImagingExtractor(ImagingExtractor):
 
         Returns
         -------
-        no_of_channels: int
+        num_of_channels: int
             integer count of number of channels
         """
         return self._num_channels
@@ -103,7 +103,7 @@ class NumpySegmentationExtractor(SegmentationExtractor):
         """
         Parameters:
         ----------
-        filepath: str
+        file_path: str
             The location of the folder containing the custom file format.
         image_masks: np.ndarray
             Binary image for each of the regions of interest
@@ -160,10 +160,10 @@ class NumpySegmentationExtractor(SegmentationExtractor):
     @property
     def roi_locations(self):
         if self._roi_locs is None:
-            no_ROIs = self.no_rois
+            num_ROIs = self.get_num_rois()
             raw_images = self.image_masks
-            roi_location = np.ndarray([2, no_ROIs], dtype='int')
-            for i in range(no_ROIs):
+            roi_location = np.ndarray([2, num_ROIs], dtype='int')
+            for i in range(num_ROIs):
                 temp = np.where(raw_images[:, :, i] == np.amax(raw_images[:, :, i]))
                 roi_location[:, i] = np.array([np.median(temp[0]), np.median(temp[1])]).T
             return roi_location
@@ -171,7 +171,7 @@ class NumpySegmentationExtractor(SegmentationExtractor):
             return self._roi_locs
 
     @staticmethod
-    def write_segmentation(segmentation_object, savepath):
+    def write_segmentation(segmentation_object, save_path):
         raise NotImplementedError
 
     # defining the abstract class enformed methods:

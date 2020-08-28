@@ -18,15 +18,15 @@ class CaimanSegmentationExtractor(SegmentationExtractor):
     mode = 'file'
     installation_mesg = ""  # error message when not installed
 
-    def __init__(self, filepath):
+    def __init__(self, file_path):
         """
         Parameters
         ----------
-        filepath: str
+        file_path: str
             The location of the folder containing caiman *.hdmf output file.
         """
         SegmentationExtractor.__init__(self)
-        self.filepath = filepath
+        self.file_path = file_path
         self._dataset_file = self._file_extractor_read()
         self._roi_response = self._trace_extractor_read('F_dff')
         self._roi_response_fluorescence = self._roi_response
@@ -41,7 +41,7 @@ class CaimanSegmentationExtractor(SegmentationExtractor):
         self._dataset_file.close()
 
     def _file_extractor_read(self):
-        f = h5py.File(self.filepath, 'r')
+        f = h5py.File(self.file_path, 'r')
         return f
 
     def _image_mask_sparse_read(self):
@@ -91,14 +91,14 @@ class CaimanSegmentationExtractor(SegmentationExtractor):
         return roi_location
 
     @staticmethod
-    def write_segmentation(segmentation_object, savepath, **kwargs):
+    def write_segmentation(segmentation_object, save_path, **kwargs):
         plane_no = kwargs.get('plane_no', 0)
-        filename = os.path.basename(savepath)
-        savepath_folder = os.path.join(os.path.dirname(savepath), f'Plane_{plane_no}')
-        savepath = os.path.join(savepath_folder, filename)
-        if savepath.split('.')[-1]!='hdf5':
+        filename = os.path.basename(save_path)
+        save_path_folder = os.path.join(os.path.dirname(save_path), f'Plane_{plane_no}')
+        save_path = os.path.join(save_path_folder, filename)
+        if save_path.split('.')[-1]!='hdf5':
             raise ValueError('filetype to save must be *.hdf5')
-        with h5py.File(savepath,'w') as f:
+        with h5py.File(save_path,'w') as f:
             #create base groups:
             estimates = f.create_group('estimates')
             params = f.create_group('params')

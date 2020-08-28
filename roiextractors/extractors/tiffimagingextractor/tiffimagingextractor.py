@@ -97,5 +97,5 @@ class TiffImagingExtractor(ImagingExtractor):
         return self._num_channels
 
     @staticmethod
-    def write_imaging(imaging, savepath):
+    def write_imaging(imaging, save_path):
         pass

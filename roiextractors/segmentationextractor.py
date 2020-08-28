@@ -150,7 +150,7 @@ class SegmentationExtractor(ABC, BaseExtractor):
         Returns
         ------
         roi_locs: numpy.ndarray
-            2-D array: 2 X no_ROIs. The pixel ids (x,y) where the centroid of the ROI is.
+            2-D array: 2 X num_ROIs. The pixel ids (x,y) where the centroid of the ROI is.
         """
         pass
 
@@ -209,7 +209,7 @@ class SegmentationExtractor(ABC, BaseExtractor):
 
         Returns
         -------
-        no_rois: array_like
+        num_rois: array_like
             2-D array: image y x image x
         """
         pass
@@ -293,7 +293,7 @@ class SegmentationExtractor(ABC, BaseExtractor):
 
         Returns
         -------
-        no_rois: int
+        num_rois: int
             integer number of ROIs extracted.
         """
         return len(self.get_roi_ids())
@@ -313,7 +313,7 @@ class SegmentationExtractor(ABC, BaseExtractor):
         Number of channels in the pipeline
         Returns
         -------
-        no_of_channels: int
+        num_of_channels: int
         """
         return len(self._channel_names)
 

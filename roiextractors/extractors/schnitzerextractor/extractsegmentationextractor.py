@@ -16,15 +16,15 @@ class ExtractSegmentationExtractor(SegmentationExtractor):
     mode = 'file'
     installation_mesg = ""  # error message when not installed
 
-    def __init__(self, filepath):
+    def __init__(self, file_path):
         """
         Parameters
         ----------
-        filepath: str
+        file_path: str
             The location of the folder containing dataset.mat file.
         """
         SegmentationExtractor.__init__(self)
-        self.filepath = filepath
+        self.file_path = file_path
         self._dataset_file, self._group0 = self._file_extractor_read()
         self.image_masks = self._image_mask_extractor_read()
         self._roi_response = self._trace_extractor_read()
@@ -37,7 +37,7 @@ class ExtractSegmentationExtractor(SegmentationExtractor):
         self._dataset_file.close()
 
     def _file_extractor_read(self):
-        f = h5py.File(self.filepath, 'r')
+        f = h5py.File(self.file_path, 'r')
         _group0_temp = list(f.keys())
         _group0 = [a for a in _group0_temp if '#' not in a]
         return f, _group0
@@ -70,14 +70,14 @@ class ExtractSegmentationExtractor(SegmentationExtractor):
     def roi_locations(self):
         no_ROIs = self.no_rois
         raw_images = self.image_masks
-        roi_location = np.ndarray([2, no_ROIs], dtype='int')
-        for i in range(no_ROIs):
+        roi_location = np.ndarray([2, num_ROIs], dtype='int')
+        for i in range(num_ROIs):
             temp = np.where(raw_images[:, :, i] == np.amax(raw_images[:, :, i]))
             roi_location[:, i] = np.array([np.median(temp[0]), np.median(temp[1])]).T
         return roi_location
 
     @staticmethod
-    def write_segmentation(segmentation_object, savepath):
+    def write_segmentation(segmentation_object, save_path):
         raise NotImplementedError
 
     # defining the abstract class enformed methods:

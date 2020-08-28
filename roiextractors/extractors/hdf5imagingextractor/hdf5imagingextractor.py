@@ -21,10 +21,10 @@ class Hdf5ImagingExtractor(ImagingExtractor):
                  channel_names=None):
         assert HAVE_H5, self.installation_mesg
         ImagingExtractor.__init__(self)
-        self.filepath = Path(file_path)
+        self.file_path = Path(file_path)
         self._sampling_frequency = sampling_frequency
         self._mov_field = mov_field
-        assert self.filepath.suffix in ['.h5', '.hdf5'], ""
+        assert self.file_path.suffix in ['.h5', '.hdf5'], ""
         self._channel_names = channel_names
 
         with h5py.File(file_path, "r") as f:
@@ -104,5 +104,5 @@ class Hdf5ImagingExtractor(ImagingExtractor):
         return self._num_channels
 
     @staticmethod
-    def write_imaging(imaging, savepath):
+    def write_imaging(imaging, save_path):
         pass

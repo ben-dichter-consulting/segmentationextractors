@@ -16,15 +16,15 @@ class CnmfeSegmentationExtractor(SegmentationExtractor):
     mode = 'file'
     installation_mesg = ""  # error message when not installed
 
-    def __init__(self, filepath):
+    def __init__(self, file_path):
         """
         Parameters
         ----------
-        filepath: str
+        file_path: str
             The location of the folder containing dataset.mat file.
         """
         SegmentationExtractor.__init__(self)
-        self.filepath = filepath
+        self.file_path = file_path
         self._dataset_file, self._group0 = self._file_extractor_read()
         self.image_masks = self._image_mask_extractor_read()
         self._roi_response = self._trace_extractor_read()
@@ -37,7 +37,7 @@ class CnmfeSegmentationExtractor(SegmentationExtractor):
         self._dataset_file.close()
 
     def _file_extractor_read(self):
-        f = h5py.File(self.filepath, 'r')
+        f = h5py.File(self.file_path, 'r')
         _group0_temp = list(f.keys())
         _group0 = [a for a in _group0_temp if '#' not in a]
         return f, _group0
@@ -75,7 +75,7 @@ class CnmfeSegmentationExtractor(SegmentationExtractor):
         return roi_location
 
     @staticmethod
-    def write_segmentation(segmentation_object, savepath):
+    def write_segmentation(segmentation_object, save_path):
         raise NotImplementedError
 
     # defining the abstract class enformed methods:
