@@ -61,14 +61,13 @@ class ExtractSegmentationExtractor(SegmentationExtractor):
         return ''.join(charlist)
 
     def get_accepted_list(self):
-        return list(range(self.no_rois))
+        return list(range(self.get_num_rois()))
 
     def get_rejected_list(self):
-        return [a for a in range(self.no_rois) if a not in set(self.get_accepted_list())]
+        return [a for a in range(self.get_num_rois()) if a not in set(self.get_accepted_list())]
 
-    @property
-    def roi_locations(self):
-        no_ROIs = self.no_rois
+    def _calculate_roi_locations(self):
+        num_ROIs = self.get_num_rois()
         raw_images = self.image_masks
         roi_location = np.ndarray([2, num_ROIs], dtype='int')
         for i in range(num_ROIs):
@@ -82,28 +81,28 @@ class ExtractSegmentationExtractor(SegmentationExtractor):
 
     # defining the abstract class enformed methods:
     def get_roi_ids(self):
-        return list(range(self.no_rois))
+        return list(range(self.get_num_rois()))
 
     def get_num_rois(self):
         return self._roi_response.shape[0]
 
     def get_roi_locations(self, roi_ids=None):
         if roi_ids is None:
-            return self.roi_locations
+            return self._calculate_roi_locations()
         else:
-            roi_idx = [np.where(np.array(i) == self.roi_ids)[0] for i in roi_ids]
+            roi_idx = [np.where(np.array(i) == self.get_roi_ids())[0] for i in roi_ids]
             ele = [i for i, j in enumerate(roi_idx) if j.size == 0]
             roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
-            return self.roi_locations[:, roi_idx_]
+            return self._calculate_roi_locations()[:, roi_idx_]
 
     def get_num_frames(self):
         return self._roi_response.shape[1]
 
     def get_roi_image_masks(self, roi_ids=None):
         if roi_ids is None:
-            roi_idx_ = self.roi_ids
+            roi_idx_ = self.get_roi_ids()
         else:
-            roi_idx = [np.where(np.array(i) == self.roi_ids)[0] for i in roi_ids]
+            roi_idx = [np.where(np.array(i) == self.get_roi_ids())[0] for i in roi_ids]
             ele = [i for i, j in enumerate(roi_idx) if j.size == 0]
             roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
         return np.array([self.image_masks[:, :, int(i)].T for i in roi_idx_]).T

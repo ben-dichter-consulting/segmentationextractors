@@ -36,68 +36,15 @@ class SegmentationExtractor(ABC, BaseExtractor):
         """
         return self.get_image_size()
 
-    @property
-    def no_rois(self):
+    @abstractmethod
+    def _calculate_roi_locations(self):
         """
-        The number of Independent sources(neurons) identified after the
-        segmentation operation. The regions of interest for which fluorescence
-        traces will be extracted downstream.
-
-        Returns
-        -------
-        no_rois: int
-            The number of rois
-        """
-        return self.get_num_rois()
-
-    @property
-    def roi_ids(self):
-        """
-        Integer label given to each region of interest (neuron).
-
-        Returns
-        -------
-        roi_idx: list
-            list of integers of the ROIs. Listed in the order in which the ROIs
-            occur in the image_masks (2nd dimention)
-        """
-        return self.get_roi_ids()
-
-    @property
-    def roi_locations(self):
-        """
-        The x and y pixel location of the ROIs. The location where the pixel
-        value is maximum in the image mask.
-
+        extracts the ROI locations from the images: median of the roi
         Returns
         -------
         roi_locs: np.array
-            Array with the first row representing the y (height) and second representing
-            the x (width) coordinates of the ROI.
         """
-        return self.get_roi_locations()
-
-    @property
-    def num_frames(self):
-        """
-        Total number of images in the image sequence across time.
-
-        Returns
-        -------
-        num_of_frames: int
-            Same as the -1 dimention of the dF/F trace(roi_response).
-        """
-        return self.get_num_frames()
-
-    @property
-    def sampling_frequency(self):
-        """
-        Returns
-        -------
-        samp_freq: int
-            Sampling frequency of the dF/F trace.
-        """
-        return self._sampling_frequency
+        pass
 
     @abstractmethod
     def get_accepted_list(self) -> list:
@@ -164,7 +111,6 @@ class SegmentationExtractor(ABC, BaseExtractor):
             Channel list.
         """
         pass
-
 
     @abstractmethod
     def get_roi_image_masks(self, roi_ids=None) -> np.array:
@@ -327,7 +273,7 @@ class SegmentationExtractor(ABC, BaseExtractor):
         return self._raw_movie_file_location
 
     @staticmethod
-    def write_segmentation(segmentation_extractor, savepath, **kwargs):
+    def write_segmentation(segmentation_extractor, save_path, plane_num, **kwargs):
         """
         Static method to write recording back to the native format.
 
@@ -336,7 +282,7 @@ class SegmentationExtractor(ABC, BaseExtractor):
         segmentation_extractor: SegmentationExtractor
             The EXTRACT segmentation object from which an EXTRACT native format
             file has to be generated.
-        savepath: str
+        save_path: str
             path to save the native format.
         """
         raise NotImplementedError

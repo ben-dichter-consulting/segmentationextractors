@@ -48,7 +48,7 @@ class CaimanSegmentationExtractor(SegmentationExtractor):
         roi_ids = self._dataset_file['estimates']['A']['indices']
         masks = self._dataset_file['estimates']['A']['data']
         ids = self._dataset_file['estimates']['A']['indptr']
-        _image_mask = np.reshape(csc_matrix((masks, roi_ids, ids), shape=(np.prod(self.get_image_size()),self.no_rois)).toarray(),
+        _image_mask = np.reshape(csc_matrix((masks, roi_ids, ids), shape=(np.prod(self.get_image_size()),self.get_num_rois())).toarray(),
             [self.get_image_size()[0],self.get_image_size()[1],-1],order='F')
         return masks, roi_ids, ids, _image_mask
 
@@ -67,25 +67,24 @@ class CaimanSegmentationExtractor(SegmentationExtractor):
     def get_accepted_list(self):
         accepted = self._dataset_file['estimates']['idx_components']
         if len(accepted.shape)==0:
-            accepted = list(range(self.no_rois))
+            accepted = list(range(self.get_num_rois()))
         return accepted
 
     def get_rejected_list(self):
         rejected = self._dataset_file['estimates']['idx_components_bad']
         if len(rejected.shape) == 0:
-            rejected = [a for a in range(self.no_rois) if a not in set(self.get_accepted_list())]
+            rejected = [a for a in range(self.get_num_rois()) if a not in set(self.get_accepted_list())]
         return rejected
 
-    @property
-    def roi_locations(self):
+    def _calculate_roi_locations(self):
         _masks, _mask_roi_ids, _mask_ids, _ = self._image_mask_sparse_read()
-        roi_location = np.ndarray([2, self.no_rois], dtype='int')
-        for i in range(self.no_rois):
+        roi_location = np.ndarray([2, self.get_num_rois()], dtype='int')
+        for i in range(self.get_num_rois()):
             max_mask_roi_id = _mask_roi_ids[_mask_ids[i]+np.argmax(
                 _masks[_mask_ids[i]:_mask_ids[i+1]]
             )]
-            roi_location[:, i] = [((max_mask_roi_id+1)%(self.image_size[0]+1))-1,#assuming order='F'
-                                  ((max_mask_roi_id+1)//(self.image_size[0]+1))]
+            roi_location[:, i] = [((max_mask_roi_id+1)%(self.get_image_size()[0]+1))-1,#assuming order='F'
+                                  ((max_mask_roi_id+1)//(self.get_image_size()[0]+1))]
             if roi_location[0,i]<0:
                 roi_location[0,i]=0
         return roi_location
@@ -129,19 +128,19 @@ class CaimanSegmentationExtractor(SegmentationExtractor):
 
     # defining the abstract class enformed methods:
     def get_roi_ids(self):
-        return list(range(self.no_rois))
+        return list(range(self.get_num_rois()))
 
     def get_num_rois(self):
         return self._roi_response.shape[0]
 
     def get_roi_locations(self, roi_ids=None):
         if roi_ids is None:
-            return self.roi_locations
+            return self._calculate_roi_locations()
         else:
-            roi_idx = [np.where(np.array(i) == self.roi_ids)[0] for i in roi_ids]
+            roi_idx = [np.where(np.array(i) == self.get_roi_ids())[0] for i in roi_ids]
             ele = [i for i, j in enumerate(roi_idx) if j.size == 0]
             roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
-            return self.roi_locations[:, roi_idx_]
+            return self._calculate_roi_locations()[:, roi_idx_]
 
     def get_num_frames(self):
         return self._roi_response.shape[1]
@@ -150,7 +149,7 @@ class CaimanSegmentationExtractor(SegmentationExtractor):
         if roi_ids is None:
             roi_idx_ = range(self.get_num_rois())
         else:
-            roi_idx = [np.where(np.array(i) == self.roi_ids)[0] for i in roi_ids]
+            roi_idx = [np.where(np.array(i) == self.get_roi_ids())[0] for i in roi_ids]
             ele = [i for i, j in enumerate(roi_idx) if j.size == 0]
             roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
         return self.image_masks[:, :, roi_idx_]

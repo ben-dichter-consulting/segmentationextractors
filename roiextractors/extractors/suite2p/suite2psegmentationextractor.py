@@ -63,8 +63,7 @@ class Suite2pSegmentationExtractor(SegmentationExtractor):
                 img = self.ops[bstr]
         return img
 
-    @property
-    def roi_locations(self):
+    def _calculate_roi_locations(self):
         return np.array([j['med'] for j in self.stat]).T
 
     @staticmethod
@@ -73,19 +72,19 @@ class Suite2pSegmentationExtractor(SegmentationExtractor):
 
     # defining the abstract class enforced methods:
     def get_roi_ids(self):
-        return list(range(self.no_rois))
+        return list(range(self.get_num_rois()))
 
     def get_num_rois(self):
         return len(self.stat)
 
     def get_roi_locations(self, roi_ids=None):
         if roi_ids is None:
-            return self.roi_locations
+            return self._calculate_roi_locations()
         else:
-            roi_idx = [np.where(np.array(i) == self.roi_ids)[0] for i in roi_ids]
+            roi_idx = [np.where(np.array(i) == self.get_roi_ids())[0] for i in roi_ids]
             ele = [i for i, j in enumerate(roi_idx) if j.size == 0]
             roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
-            return self.roi_locations[:, roi_idx_]
+            return self._calculate_roi_locations()[:, roi_idx_]
 
     def get_num_frames(self):
         return self.ops['nframes']
@@ -94,7 +93,7 @@ class Suite2pSegmentationExtractor(SegmentationExtractor):
         if roi_ids is None:
             roi_idx_ = range(self.get_num_rois())
         else:
-            roi_idx = [np.where(np.array(i) == self.roi_ids)[0] for i in roi_ids]
+            roi_idx = [np.where(np.array(i) == self.get_roi_ids())[0] for i in roi_ids]
             ele = [i for i, j in enumerate(roi_idx) if j.size == 0]
             roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
         return _image_mask_extractor(self.get_roi_pixel_masks(roi_ids=roi_idx_), range(len(roi_idx_)), self.get_image_size())
@@ -108,7 +107,7 @@ class Suite2pSegmentationExtractor(SegmentationExtractor):
         if roi_ids is None:
             roi_idx_ = range(self.get_num_rois())
         else:
-            roi_idx = [np.where(np.array(i) == self.roi_ids)[0] for i in roi_ids]
+            roi_idx = [np.where(np.array(i) == self.get_roi_ids())[0] for i in roi_ids]
             ele = [i for i, j in enumerate(roi_idx) if j.size == 0]
             roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
         return [pixel_mask[i] for i in roi_idx_]

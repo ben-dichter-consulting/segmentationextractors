@@ -280,15 +280,14 @@ class NwbSegmentationExtractor(SegmentationExtractor):
 
     def get_accepted_list(self):
         if self._accepted_list is None:
-            return list(range(self.no_rois))
+            return list(range(self.get_num_rois()))
         else:
             return np.where(self._accepted_list==1)[0].tolist()
 
     def get_rejected_list(self):
-        return [a for a in self.roi_ids if a not in set(self.get_accepted_list())]
+        return [a for a in self.get_roi_ids() if a not in set(self.get_accepted_list())]
 
-    @property
-    def roi_locations(self):
+    def _calculate_roi_locations(self):
         if self._roi_locs is None:
             return None
         else:
@@ -299,18 +298,15 @@ class NwbSegmentationExtractor(SegmentationExtractor):
 
     def get_roi_locations(self, roi_ids=None):
         if roi_ids is None:
-            return self.roi_locations
+            return self._calculate_roi_locations()
         else:
-            roi_idx = [np.where(np.array(i) == self.roi_ids)[0] for i in roi_ids]
+            roi_idx = [np.where(np.array(i) == self.get_roi_ids())[0] for i in roi_ids]
             ele = [i for i, j in enumerate(roi_idx) if j.size == 0]
             roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
-            return self.roi_locations[:, roi_idx_]
+            return self._calculate_roi_locations()[:, roi_idx_]
 
     def get_roi_ids(self):
         return self._roi_idx
-
-    def get_num_rois(self):
-        return self.roi_ids.size
 
     def get_roi_image_masks(self, roi_ids=None):
         if self.image_masks is None:
@@ -318,7 +314,7 @@ class NwbSegmentationExtractor(SegmentationExtractor):
         if roi_ids is None:
             roi_idx_ = range(self.get_num_rois())
         else:
-            roi_idx = [np.where(np.array(i) == self.roi_ids)[0] for i in roi_ids]
+            roi_idx = [np.where(np.array(i) == self.get_roi_ids())[0] for i in roi_ids]
             ele = [i for i, j in enumerate(roi_idx) if j.size == 0]
             roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
         return np.array([self.image_masks[:, :, int(i)].T for i in roi_idx_]).T
@@ -369,12 +365,12 @@ class NwbSegmentationExtractor(SegmentationExtractor):
 
         #OPtical Channel:
         channel_names = [segext_obj.get_channel_names()]
-        input_args=[[dict(name=i) for i in channel_names[k]] for k in range(segext_obj.no_planes)]
+        input_args=[[dict(name=i) for i in channel_names[k]] for k in range(segext_obj.get_num_planes())]
         for j,i in enumerate(metadata['ophys']['ImagingPlane']):
             for j2,i2 in enumerate(i['optical_channels']):
                 input_args[j][j2].update(**i2)
         optical_channels=[[OpticalChannel(**input_args[k][j]) for j,i in enumerate(channel_names[k])]
-                          for k in range(segext_obj.no_planes)]
+                          for k in range(segext_obj.get_num_planes())]
 
         # ImagingPlane:
         input_kwargs = [dict(
@@ -385,7 +381,7 @@ class NwbSegmentationExtractor(SegmentationExtractor):
             imaging_rate=1.0,
             indicator='unknown',
             location='unknown'
-        ) for i in range(segext_obj.no_planes)]
+        ) for i in range(segext_obj.get_num_planes())]
         for j, i in enumerate(metadata['ophys']['ImagingPlane']):
             _ = i.pop('optical_channels')
             i.update(optical_channel=optical_channels[j])
@@ -404,7 +400,7 @@ class NwbSegmentationExtractor(SegmentationExtractor):
 
         # ROI add:
         image_mask_list = [segext_obj.get_roi_image_masks()]
-        roi_id_list = [segext_obj.roi_ids]
+        roi_id_list = [segext_obj.get_roi_ids()]
         accepted_id_locs = [[1 if k in [segext_obj.get_accepted_list()][j] else 0 for k in i]
                             for j,i in enumerate(roi_id_list)]
         for j, ps_loop in enumerate(ps):
@@ -429,7 +425,7 @@ class NwbSegmentationExtractor(SegmentationExtractor):
         ophys_mod.add_data_interface(f_container)
         roi_response_dict = segext_obj.get_traces_dict()
         c=0
-        for plane_no in range(segext_obj.no_planes):
+        for plane_no in range(segext_obj.get_num_planes()):
             input_kwargs.update(rois=ps[plane_no].create_roi_table_region(
                 description=f'region for Imaging plane{plane_no}',
                 region=list(range(segext_obj.no_rois))))
