@@ -30,11 +30,10 @@ class Suite2pSegmentationExtractor(SegmentationExtractor):
         self.file_path = fileloc
         self.stat = self._load_npy('stat.npy')
         self._roi_response_raw = self._load_npy('F.npy', mmap_mode='r')
-        self._roi_response_raw_neuropil = self._load_npy('Fneu.npy', mmap_mode='r')
-        self._roi_response_raw_deconvolved = self._load_npy('spks.npy', mmap_mode='r')
+        self._roi_response_neuropil = self._load_npy('Fneu.npy', mmap_mode='r')
+        self._roi_response_deconvolved = self._load_npy('spks.npy', mmap_mode='r')
         self.iscell = self._load_npy('iscell.npy', mmap_mode='r')
         self.ops = self._load_npy('ops.npy').item()
-        self._channel_names = [f'OpticalChannel{i}' for i in range(self.ops['nchannels'])]
         self._sampling_frequency = self.ops['fs'] * [2 if self.combined else 1][0]
         self._raw_movie_file_location = self.ops['filelist'][0]
         self.image_masks = self.get_roi_image_masks()
