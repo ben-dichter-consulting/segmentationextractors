@@ -273,7 +273,7 @@ class SegmentationExtractor(ABC, BaseExtractor):
         return self._num_planes
 
     @staticmethod
-    def write_segmentation(segmentation_extractor, save_path, plane_num, **kwargs):
+    def write_segmentation(segmentation_extractor, save_path, plane_num=0, file_overwrite=True):
         """
         Static method to write recording back to the native format.
 
@@ -284,5 +284,9 @@ class SegmentationExtractor(ABC, BaseExtractor):
             file has to be generated.
         save_path: str
             path to save the native format.
+        plane_num: int
+            plane number for the imaging plane used for the segmentation.
+        file_overwrite: bool
+            overwrite the file if it exists.
         """
         raise NotImplementedError
