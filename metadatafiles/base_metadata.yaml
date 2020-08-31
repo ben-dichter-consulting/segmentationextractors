@@ -1,0 +1,26 @@
+---
+NWBFile:
+  session_start_time: 2000-01-01 00:00:00
+  identifier: nwbfile id
+  session_description: ses desc
+ophys:
+  Device:
+  - name: Microscope
+  Fluorescence:
+    roi_response_series:
+    - name: RoiResponseSeries
+      description: array of raw fluorescence traces
+  ImageSegmentation:
+    plane_segmentations:
+    - description: Segmented ROIs
+  ImagingPlane:
+    - name: ImagingPlane
+      description: imaging plane description
+      excitation_lambda: 600.0
+      indicator: GCaMP
+      optical_channels:
+        - name: OpticalChannel
+          emission_lambda: 500.0
+          description: description of optical channel
+  TwoPhotonSeries:
+    - name: TwoPhotonSeries

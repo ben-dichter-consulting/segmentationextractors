@@ -5,6 +5,8 @@ from .extraction_tools import ArrayType
 from .extraction_tools import _pixel_mask_extractor
 from copy import deepcopy
 import warnings
+import yaml
+from pathlib import Path
 
 
 class SegmentationExtractor(ABC, BaseExtractor):
@@ -28,12 +30,76 @@ class SegmentationExtractor(ABC, BaseExtractor):
         self._roi_response_deconvolved = None
         self._image_correlation = None
         self._image_mean = None
-        self._roi_response_dict = dict(raw=self._roi_response_raw,
-                                       dff=self._roi_response_raw_dff,
-                                       neuropil=self._roi_response_neuropil,
-                                       deconvolved=self._roi_response_deconvolved)
-        self._images_dict = dict(mean=self._image_mean,
-                                 correlation=self._image_correlation)
+        self._raw_movie_file_location = None
+        self._experiment_metadata = self._get_default_metadata()
+
+    def _get_default_metadata(self):
+        """
+        Updates the base metadata with class specific version
+        Returns
+        -------
+        default_metadata: dict
+        """
+        with open(Path(__file__).parent.parent.joinpath('metadatafiles', 'base_metadata.yaml'), 'r') as f:
+            default_metadata = yaml.safe_load(f)
+        return default_metadata
+
+    def _set_default_segext_metadata(self):
+        """
+        Called by specific segext classes to set metadata specific to them
+        """
+        # Optical Channel name:
+        for i in range(self.get_num_channels()):
+            ch_name = self.get_channel_names()[i]
+            if i==0:
+                self._experiment_metadata['ophys']['ImagingPlane'][0]['optical_channels'][i]['name'] = ch_name
+            else:
+                self._experiment_metadata['ophys']['ImagingPlane'][0]['optical_channels'].append(dict(
+                    name=ch_name,
+                    emission_lambda=500.0,
+                    description=f'{ch_name} description'
+                ))
+
+        # set roi_response_series rate:
+        rate = np.float('NaN') if self.get_sampling_frequency() is None else self.get_sampling_frequency()
+        for trace_name, trace_data in self.get_traces_dict().items():
+            if trace_name=='raw':
+                if trace_data is not None:
+                    self._experiment_metadata['ophys']['Fluorescence']['roi_response_series'][0].update(rate=rate)
+                continue
+            if len(trace_data.shape)!=0:
+                self._experiment_metadata['ophys']['Fluorescence']['roi_response_series'].append(dict(
+                    name=trace_name.capitalize(),
+                    description=f'description of {trace_name} traces',
+                    rate=rate
+                ))
+        # TwoPhotonSeries update:
+        self._experiment_metadata['ophys']['TwoPhotonSeries'][0].update(
+            dimension=self.get_image_size())
+
+    def set_experiment_metadata(self, metadata_file):
+        """
+        Update the default values of metadata with a new yaml file
+        Parameters
+        ----------
+        metadata_file
+        """
+        if isinstance(metadata_file,str):
+            with open(metadata_file, 'r') as f:
+                self._experiment_metadata.update(yaml.safe_load(f))
+        elif isinstance(metadata_file,dict):
+            self._experiment_metadata.update(metadata_file)
+        else:
+            raise Exception('enter a valid metadata_file type: yaml filepath/dictionary')
+
+    def get_experiment_metadata(self):
+        """
+        Retrns the edited version of experiment metadata
+        Returns
+        -------
+        self._experiment_metadata: dict
+        """
+        return self._experiment_metadata
 
     @abstractmethod
     def _calculate_roi_locations(self):

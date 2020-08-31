@@ -35,6 +35,7 @@ class CaimanSegmentationExtractor(SegmentationExtractor):
         self._raw_movie_file_location = self._dataset_file['params']['data']['fnames'][0].decode('utf-8')
         self._sampling_frequency = self._dataset_file['params']['data']['fr'][()]
         self.image_masks = self._image_mask_sparse_read()[-1]
+        self._set_default_segext_metadata()
 
     def __del__(self):
         self._dataset_file.close()

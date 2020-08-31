@@ -48,6 +48,7 @@ class SimaSegmentationExtractor(SegmentationExtractor):
         self.pixel_masks = _pixel_mask_extractor(self.image_masks, self.get_roi_ids())
         self._roi_response_raw = self._trace_extractor_read()
         self._image_mean = self._summary_image_read()
+        self._set_default_segext_metadata()
 
     @staticmethod
     def _convert_sima(old_pkl_loc):
@@ -138,7 +139,7 @@ class SimaSegmentationExtractor(SegmentationExtractor):
 
     def _summary_image_read(self):
         summary_images_ = np.squeeze(self._dataset_file.time_averages[0]).T
-        return np.array(summary_images_).T
+        return np.array(summary_images_).T[:,:,0]
 
     def get_accepted_list(self):
         return list(range(self.get_num_rois()))

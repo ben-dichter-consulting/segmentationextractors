@@ -39,6 +39,7 @@ class Suite2pSegmentationExtractor(SegmentationExtractor):
         self.image_masks = self.get_roi_image_masks()
         self._image_correlation = self._summary_image_read('Vcorr')
         self._image_mean = self._summary_image_read('meanImg')
+        self._set_default_segext_metadata()
 
     def _load_npy(self, filename, mmap_mode=None):
         fpath = os.path.join(self.file_path, f'Plane{self.plane_no}', filename)
