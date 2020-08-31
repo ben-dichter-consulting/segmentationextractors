@@ -224,15 +224,14 @@ class NwbSegmentationExtractor(SegmentationExtractor):
         # Extract Image dimensions:
 
         # Extract roi_response:
-        _roi_response_dict = dict()
         _roi_names = [_nwbchildren_name[val]
                       for val, i in enumerate(_nwbchildren_type) if i == 'RoiResponseSeries']
         if not _roi_names:
             raise Exception('no ROI response series found')
         else:
             for roi_name in _roi_names:
-                _roi_response_dict[roi_name] = mod['Fluorescence'].get_roi_response_series(roi_name).data[:].T
-        self._roi_response_raw = _roi_response_dict[_roi_names[0]]
+                roi_name_attr = 'raw' if roi_name=='RoiResponseSeries' else roi_name.lower()
+                setattr(self, f'_roi_response_{roi_name_attr}',mod['Fluorescence'].get_roi_response_series(roi_name).data[:].T)
         for trace_names in ['roiresponseseries','neuropil','deconvolved']:
             trace_name_find = [j for j,i in enumerate(_roi_names) if trace_names in i.lower()]
             if trace_name_find:
