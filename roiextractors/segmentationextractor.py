@@ -23,7 +23,7 @@ class SegmentationExtractor(ABC, BaseExtractor):
         self._channel_names = ['OpticalChannel']
         self._num_planes = 1
         self._roi_response_raw = None
-        self._roi_response_raw_dff = None
+        self._roi_response_dff = None
         self._roi_response_neuropil = None
         self._roi_response_deconvolved = None
         self._image_correlation = None
@@ -173,14 +173,12 @@ class SegmentationExtractor(ABC, BaseExtractor):
             roi_idx = [np.where(np.array(i) == self.get_roi_ids())[0] for i in roi_ids]
             ele = [i for i, j in enumerate(roi_idx) if j.size == 0]
             roi_idx_ = [j[0] for i, j in enumerate(roi_idx) if i not in ele]
-        traces = self._roi_response_dict.get(name, 'not found')
-        if traces == 'not found':
-            print(f'traces for {name} not found, enter one of {list(self._roi_response_dict.keys())}')
+        traces = self.get_traces_dict().get(name)
+        if len(traces.shape) == 0:
+            print(f'traces for {name} not found, enter one of {list(self.get_traces_dict().keys())}')
             return None
-        if traces:
-            return np.array([traces[int(i), start_frame:end_frame] for i in roi_idx_])
         else:
-            return None
+            return np.array([traces[int(i), start_frame:end_frame] for i in roi_idx_])
 
     def get_traces_dict(self):
         """
@@ -191,7 +189,10 @@ class SegmentationExtractor(ABC, BaseExtractor):
             dictionary with key, values representing different types of RoiResponseSeries
             Flourescence, Neuropil, Deconvolved, Background etc
         """
-        return deepcopy(self._roi_response_dict)
+        return deepcopy(dict(raw=np.array(self._roi_response_raw),
+                             dff=np.array(self._roi_response_dff),
+                             neuropil=np.array(self._roi_response_neuropil),
+                             deconvolved=np.array(self._roi_response_deconvolved)))
 
     def get_images_dict(self):
         """
@@ -202,7 +203,8 @@ class SegmentationExtractor(ABC, BaseExtractor):
             dictionary with key, values representing different types of Images used in segmentation:
             Mean, Correlation image
         """
-        return self._images_dict
+        return deepcopy(dict(mean=self._image_mean,
+                             correlation=self._image_correlation))
 
     def get_images(self, name='correlation'):
         """
@@ -215,11 +217,11 @@ class SegmentationExtractor(ABC, BaseExtractor):
         -------
         images: np.ndarray
         """
-        image = self._images_dict.get(name)
+        image = self.get_images_dict().get(f'_image_{name}')
         if image:
             return image
         else:
-            warnings.warn(f'cound not find {name} image, enter one of {list(self._images_dict.keys())}')
+            warnings.warn(f'could not find {name} image, enter one of {list(self.get_images_dict().keys())}')
 
     def get_sampling_frequency(self):
         """This function returns the sampling frequency in units of Hz.
@@ -229,7 +231,7 @@ class SegmentationExtractor(ABC, BaseExtractor):
         samp_freq: float
             Sampling frequency of the recordings in Hz.
         """
-        return self._sampling_frequency
+        return np.float(self._sampling_frequency) if self._sampling_frequency else None
 
     def get_num_rois(self):
         """Returns total number of Regions of Interest in the acquired images.
